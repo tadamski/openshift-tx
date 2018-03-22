@@ -8,7 +8,7 @@ set -e
 oc delete is,bc,dc,service tx-server 
 oc new-app jboss-eap-64~https://github.com/mmusgrov/openshift-tx.git#eap64 --context-dir='tx-server' --name='tx-server' --labels name='tx-server'
 
-# edit the dc and service yaml to add port 4447 to the ports section of the container specification:
+# add the remoting port 4447 to the ports section in the dc and service yaml config:
 # oc edit dc/tx-server && oc edit svc/tx-server
 # oc expose service tx-server && oc rollout latest tx-server
 
