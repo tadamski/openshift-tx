@@ -60,7 +60,7 @@
 
         <version.jboss.spec.javaee.7.0>1.1.0.Final-redhat-3</version.jboss.spec.javaee.7.0>
 
-        <version.jar.plugin>3.0.2</version.jar.plugin>
+        <version.war.plugin>2.1.1</version.war.plugin>
 
         <!-- maven-compiler-plugin -->
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -127,5 +127,15 @@
         <!-- Maven will append the version to the finalName (which is the name
             given to the generated war, and hence the context root) -->
         <finalName>tx-server</finalName>
+        <plugins>
+            <plugin>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>${version.war.plugin}</version>
+                <configuration>
+                    <!-- Java EE 6 doesn't require web.xml, Maven needs to catch up! -->
+                    <failOnMissingWebXml>false</failOnMissingWebXml>
+                </configuration>
+            </plugin>
+        </plugins>
     </build>
 </project>
