@@ -8,6 +8,7 @@ import javax.ejb.Remote;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.ejb.TransactionManagement;
 import javax.naming.NamingException;
 import javax.transaction.NotSupportedException;
 import javax.transaction.Status;
@@ -19,7 +20,10 @@ import java.io.StringWriter;
 import java.rmi.RemoteException;
 import java.util.Hashtable;
 
+import static javax.ejb.TransactionManagementType.BEAN;
+
 @Stateless
+@TransactionManagement(BEAN)
 @Remote (TransactionalLocal.class)
 public class TransactionalLocalBean implements TransactionalLocal {
     @Resource
