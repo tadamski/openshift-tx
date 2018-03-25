@@ -516,10 +516,9 @@
         <outbound-socket-binding name="mail-smtp">
             <remote-destination host="localhost" port="25"/>
         </outbound-socket-binding>
+        <!-- outbound socket binding for remote EJB calls -->
+        <outbound-socket-binding name="remote-tx-ejb">
+            <remote-destination host="${tx.server.host}" port="4447"/>
+        </outbound-socket-binding>
     </socket-binding-group>
-
-    <!-- outbound socket binding for remote EJB calls -->
-    <outbound-socket-binding name="remote-tx-ejb">
-        <remote-destination host="${tx.server.host}" port="4447"/>
-    </outbound-socket-binding>
 </server>
