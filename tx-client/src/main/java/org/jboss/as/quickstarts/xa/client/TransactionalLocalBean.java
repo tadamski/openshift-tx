@@ -88,9 +88,8 @@ public class TransactionalLocalBean implements TransactionalLocal {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-    public String injectFault(String arg) {
+    public String injectFault(String arg, boolean inTxn) {
         String message;
-        boolean inTxn = arg.contains("notx");
 
         try {
             StatefulRemote bean = getTransactionalStatefulBean(
