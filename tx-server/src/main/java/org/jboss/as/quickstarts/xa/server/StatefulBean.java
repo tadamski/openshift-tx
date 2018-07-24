@@ -30,6 +30,8 @@ import javax.ejb.Stateful;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.transaction.TransactionSynchronizationRegistry;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.rmi.RemoteException;
 
 /**
@@ -121,4 +123,20 @@ public class StatefulBean implements SessionSynchronization, StatefulRemote {
     public boolean isBeforeCompletion() {
         return beforeCompletion;
     }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.MANDATORY)
+    public String injectFault(String faultType) {
+        if (faultType.contains("HALT")) {
+            Runtime.getRuntime().halt(1);
+        }
+
+        try {
+            return String.format("fault %s injected on host %s",
+                    faultType, InetAddress.getLocalHost().getCanonicalHostName());
+        } catch (UnknownHostException e) {
+            return e.getMessage();
+        }
+    }
+
 }

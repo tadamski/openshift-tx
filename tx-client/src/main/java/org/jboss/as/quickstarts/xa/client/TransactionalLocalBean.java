@@ -86,6 +86,40 @@ public class TransactionalLocalBean implements TransactionalLocal {
         return message;
     }
 
+    @Override
+    @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+    public String injectFault(String arg) {
+        String message;
+        boolean inTxn = arg.contains("notx");
+
+        try {
+            StatefulRemote bean = getTransactionalStatefulBean(
+                    "StatefulBean", StatefulRemote.class.getCanonicalName());
+
+            if (inTxn) {
+                userTransaction.begin();
+            }
+
+            try {
+                String k1 = bean.injectFault(arg);
+                System.out.printf("client injectFault: %s%n", k1);
+            } finally {
+                if (inTxn) {
+                    userTransaction.rollback();
+                }
+
+                message = "success";
+            }
+        } catch (NotSupportedException | SystemException | RemoteException | IllegalStateException | SecurityException
+                | NamingException e) {
+            StringWriter sw = new StringWriter();
+            e.printStackTrace(new PrintWriter(sw));
+            message = sw.toString();
+        }
+
+        return message;
+    }
+
     private StatelessRemote getTransactionalBean(String beanName, String viewClassName) throws NamingException {
         if (statelessRemote == null)
             statelessRemote = (StatelessRemote) lookupBean(beanName, viewClassName, false);
