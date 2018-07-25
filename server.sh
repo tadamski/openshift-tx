@@ -6,7 +6,7 @@ set -e
 # git add -u && git commit -m "config" && git push origin master
 
 oc delete is,bc,dc,service tx-server 
-oc new-app jboss-eap-70~https://github.com/mmusgrov/openshift-tx.git#eap70 --context-dir='tx-server' --name='tx-server' --labels name='tx-server'
+oc new-app jboss-eap-71~https://github.com/mmusgrov/openshift-tx.git#eap71 --context-dir='tx-server' --name='tx-server' --labels name='tx-server'
 
 # add the remoting port 4447 to the ports section in the dc and service yaml config:
 # oc edit dc/tx-server && oc edit svc/tx-server
