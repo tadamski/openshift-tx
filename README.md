@@ -31,6 +31,12 @@ cat client.sh
 curl -XGET 'http://tx-client-eap-transactions.192.168.99.100.nip.io/tx-client/api/ejb/stateful/arg'
 curl -XGET 'http://tx-client-eap-transactions.192.168.99.100.nip.io/tx-client/api/ejb/stateless/arg'
 
+# debug the client
+# debug apps: https://blog.openshift.com/debugging-java-applications-on-openshift-kubernetes/
+oc set env dc/tx-server DEBUG=true
+oc get pods
+oc port-forward tx-client-3-jqn4x 8787:8787 &
+
 # Troubleshooting
 oc build-logs tx-client-1
 # oc login -u system:admin 
