@@ -1,4 +1,4 @@
-eap64
+eap64 (narayana source code is 4.17.39.Final - I think)
 
 # Starting minishift
 
