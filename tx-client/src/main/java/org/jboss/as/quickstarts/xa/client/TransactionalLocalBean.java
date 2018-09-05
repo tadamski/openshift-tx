@@ -53,7 +53,7 @@ public class TransactionalLocalBean implements TransactionalLocal {
                     SecurityException | NamingException e) {
                 StringWriter sw = new StringWriter();
                 e.printStackTrace(new PrintWriter(sw));
-                message = sw.toString();
+                message = String.format("transactionStatus: caught %s:%n%s", e.getClass().getName(), sw.toString());
             }
 
             return message;
@@ -80,7 +80,7 @@ public class TransactionalLocalBean implements TransactionalLocal {
                 | NamingException e) {
             StringWriter sw = new StringWriter();
             e.printStackTrace(new PrintWriter(sw));
-            message = sw.toString();
+            message = String.format("testSameTransactionEachCall: caught %s:%n%s", e.getClass().getName(), sw.toString());
         }
 
         return message;
@@ -113,7 +113,7 @@ public class TransactionalLocalBean implements TransactionalLocal {
                 | NamingException e) {
             StringWriter sw = new StringWriter();
             e.printStackTrace(new PrintWriter(sw));
-            message = sw.toString();
+            message = String.format("injectFault: caught %s:%n%s", e.getClass().getName(), sw.toString());
         }
 
         return message;
@@ -145,7 +145,7 @@ public class TransactionalLocalBean implements TransactionalLocal {
         return jndiContext.lookup(jndiName);
     }
 
-    public static String stringForm (int status) {
+    public static String stringForm(int status) {
         switch (status) {
             case javax.transaction.Status.STATUS_ACTIVE:
                 return "javax.transaction.Status.STATUS_ACTIVE";
