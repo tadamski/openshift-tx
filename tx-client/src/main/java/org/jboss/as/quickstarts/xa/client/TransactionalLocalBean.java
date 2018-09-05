@@ -32,6 +32,15 @@ public class TransactionalLocalBean implements TransactionalLocal {
 
     private StatefulRemote statefulEJB;
 
+    private String getTrace(Exception e, String message) {
+        StringWriter sw = new StringWriter();
+        e.printStackTrace(new PrintWriter(sw));
+        message = String.format("%s: caught %s:%n%s", message, e.getClass().getName(), sw.toString());
+        System.out.printf("EJB exception: %s%n", message);
+
+        return message;
+    }
+
     @Override
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public String transactionStatus() {
@@ -51,9 +60,7 @@ public class TransactionalLocalBean implements TransactionalLocal {
                 }
             } catch (RemoteException | NotSupportedException | SystemException | IllegalStateException |
                     SecurityException | NamingException e) {
-                StringWriter sw = new StringWriter();
-                e.printStackTrace(new PrintWriter(sw));
-                message = String.format("transactionStatus: caught %s:%n%s", e.getClass().getName(), sw.toString());
+                message = getTrace(e, "transactionStatus");
             }
 
             return message;
@@ -78,9 +85,7 @@ public class TransactionalLocalBean implements TransactionalLocal {
             }
         } catch (NotSupportedException | SystemException | RemoteException | IllegalStateException | SecurityException
                 | NamingException e) {
-            StringWriter sw = new StringWriter();
-            e.printStackTrace(new PrintWriter(sw));
-            message = String.format("testSameTransactionEachCall: caught %s:%n%s", e.getClass().getName(), sw.toString());
+            message = getTrace(e, "testSameTransactionEachCall");
         }
 
         return message;
@@ -111,9 +116,7 @@ public class TransactionalLocalBean implements TransactionalLocal {
             }
         } catch (NotSupportedException | SystemException | RemoteException | IllegalStateException | SecurityException
                 | NamingException e) {
-            StringWriter sw = new StringWriter();
-            e.printStackTrace(new PrintWriter(sw));
-            message = String.format("injectFault: caught %s:%n%s", e.getClass().getName(), sw.toString());
+            message = getTrace(e, "injectFault");
         }
 
         return message;
