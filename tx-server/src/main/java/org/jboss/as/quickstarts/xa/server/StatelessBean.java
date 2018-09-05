@@ -18,6 +18,10 @@ public class StatelessBean implements StatelessRemote {
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public int transactionStatus() throws RemoteException {
-        return transactionSynchronizationRegistry.getTransactionStatus();
+        int status = transactionSynchronizationRegistry.getTransactionStatus();
+
+        System.out.printf("Server: transactionStatus returning status %d%n", status);
+
+        return status;
     }
 }
