@@ -106,7 +106,11 @@ public class TransactionalLocalBean implements TransactionalLocal {
 
     private Object lookupBean(String beanName, String viewClassName, boolean staeful) throws NamingException {
         Hashtable properties = new Hashtable();
-        properties.put(javax.naming.Context.URL_PKG_PREFIXES, "org.jboss.ejb.client.naming");
+
+        properties.put(javax.naming.Context.INITIAL_CONTEXT_FACTORY, "org.wildfly.naming.client.WildFlyInitialContextFactory");
+        properties.put(javax.naming.Context.PROVIDER_URL,"http-remoting://localhost:8080");
+
+//        properties.put(javax.naming.Context.URL_PKG_PREFIXES, "org.jboss.ejb.client.naming");
         javax.naming.Context jndiContext = new javax.naming.InitialContext(properties);
         // context.lookup("ejb:" + appName + "/" + moduleName + "/" + distinctName + "/" + beanName + "!" + viewClassName + "?stateful");
         String jndiName = String.format("ejb:/tx-server//%s!%s", beanName, viewClassName);
@@ -116,7 +120,7 @@ public class TransactionalLocalBean implements TransactionalLocal {
         return jndiContext.lookup(jndiName);
     }
 
-    public static String stringForm (int status) {
+    public static String stringForm(int status) {
         switch (status) {
             case javax.transaction.Status.STATUS_ACTIVE:
                 return "javax.transaction.Status.STATUS_ACTIVE";

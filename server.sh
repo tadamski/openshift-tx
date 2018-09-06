@@ -12,5 +12,5 @@ oc new-app jboss-eap-71~https://github.com/mmusgrov/openshift-tx.git#eap71 --con
 # oc edit dc/tx-server && oc edit svc/tx-server
 # oc expose service tx-server && oc rollout latest tx-server
 
-# oc logs tx-client-1-build
+# oc logs build/tx-client-1
 # oc rsh `oc get pods -n tx-client | grep Running | awk '{print $1}'`
