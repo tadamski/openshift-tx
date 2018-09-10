@@ -33,7 +33,6 @@
         <extension module="org.wildfly.extension.request-controller"/>
         <extension module="org.wildfly.extension.security.manager"/>
         <extension module="org.wildfly.extension.undertow"/>
-        <!-- ##KEYCLOAK_EXTENSION## -->
     </extensions>
     <management>
         <security-realms>
@@ -71,7 +70,7 @@
             </logger>
         </audit-log>
         <management-interfaces>
-            <http-interface console-enabled="false"><!-- ##MGMT_IFACE_REALM## -->
+            <http-interface console-enabled="false">
                 <http-upgrade enabled="true"/>
                 <socket-binding http="management-http"/>
             </http-interface>
@@ -125,7 +124,6 @@
             <job-repository name="in-memory">
                 <in-memory/>
             </job-repository>
-            <!-- ##JOB_REPOSITORY## -->
             <thread-pool name="batch">
                 <max-threads count="10"/>
                 <keepalive-time time="30" unit="seconds"/>
@@ -134,7 +132,7 @@
         <subsystem xmlns="urn:jboss:domain:bean-validation:1.0"/>
         <subsystem xmlns="urn:jboss:domain:datasources:5.0">
             <datasources>
-                <datasource jta="true" jndi-name="java:jboss/datasources/ExampleDS" pool-name="ExampleDS" enabled="true" use-java-context="true"> <connection-url>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE</connection-url> <driver>h2</driver> <security> <user-name>sa</user-name> <password>sa</password> </security> </datasource><!-- ##DATASOURCES## -->
+                <datasource jta="true" jndi-name="java:jboss/datasources/ExampleDS" pool-name="ExampleDS" enabled="true" use-java-context="true"> <connection-url>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE</connection-url> <driver>h2</driver> <security> <user-name>sa</user-name> <password>sa</password> </security> </datasource>
                 <drivers>
                     <driver name="h2" module="com.h2database.h2">
                         <xa-datasource-class>org.h2.jdbcx.JdbcDataSource</xa-datasource-class>
@@ -145,7 +143,6 @@
                     <driver name="postgresql" module="org.postgresql">
                         <xa-datasource-class>org.postgresql.xa.PGXADataSource</xa-datasource-class>
                     </driver>
-                    <!-- ##DRIVERS## -->
                 </drivers>
             </datasources>
         </subsystem>
@@ -208,7 +205,11 @@
                     <option name="MAX_OUTBOUND_MESSAGES" value="1234" type="remoting"/>
                 </channel-creation-options>
             </remote>
-                        <timer-service thread-pool-name="default" default-data-store="default-file-store">                <data-stores>                    <file-data-store name="default-file-store" path="timer-service-data" relative-to="jboss.server.data.dir"/>                    <!-- ##DATASTORES## -->                </data-stores>            </timer-service>
+            <timer-service thread-pool-name="default" default-data-store="default-file-store">
+               <data-stores>
+                   <file-data-store name="default-file-store" path="timer-service-data" relative-to="jboss.server.data.dir"/>
+               </data-stores>
+            </timer-service>
             <thread-pools>
                 <thread-pool name="default">
                     <max-threads count="10"/>
@@ -342,8 +343,6 @@
             <jpa default-datasource="" default-extended-persistence-inheritance="DEEP"/>
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:jsf:1.0"/>
-        <!-- ##KEYCLOAK_SUBSYSTEM## -->
-        <!-- ##KEYCLOAK_SAML_SUBSYSTEM## -->
         <subsystem xmlns="urn:jboss:domain:mail:3.0">
             <mail-session name="default" jndi-name="java:jboss/mail/Default">
                 <smtp-server outbound-socket-binding-ref="mail-smtp"/>
@@ -395,7 +394,6 @@
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:resource-adapters:5.0">
             <resource-adapters>
-                <!-- ##RESOURCE_ADAPTERS## -->
             </resource-adapters>
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:request-controller:1.0"/>
@@ -510,7 +508,6 @@
                     </properties>
                 </configurable-sasl-server-factory>
             </sasl>
-            <!-- ##TLS## -->
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:security:2.0">
 
@@ -523,7 +520,6 @@
                         <login-module code="RealmDirect" flag="required">
                             <module-option name="password-stacking" value="useFirstPass"/>
                         </login-module>
-                        <!-- ##OTHER_LOGIN_MODULES## -->
                     </authentication>
                 </security-domain>
                 <security-domain name="jboss-web-policy" cache-type="default">
@@ -536,8 +532,6 @@
                         <policy-module code="Delegating" flag="required"/>
                     </authorization>
                 </security-domain>
-                <!-- ##KEYCLOAK_SECURITY_DOMAIN## -->
-                <!-- no additional security domains configured --><!-- ##ADDITIONAL_SECURITY_DOMAINS## -->
             </security-domains>
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:singleton:1.0">
@@ -554,7 +548,6 @@
                 </process-id>
             </core-environment>
             <recovery-environment socket-binding="txn-recovery-environment" status-socket-binding="txn-status-manager" recovery-listener="true"/>
-            <!-- ##JDBC_STORE## -->
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:undertow:4.0">
             <buffer-cache name="default"/>
@@ -564,7 +557,6 @@
                 <!-- No HTTPS configuration discovered -->
                 <host name="default-host" alias="localhost">
                     <location name="/" handler="welcome-content"/>
-                    <!-- ##ACCESS_LOG_VALVE## -->
                     <filter-ref name="server-header"/>
                     <filter-ref name="x-powered-by-header"/>
                     <http-invoker security-realm="ApplicationRealm"/>
