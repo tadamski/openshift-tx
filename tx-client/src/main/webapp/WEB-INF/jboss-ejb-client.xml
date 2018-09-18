@@ -3,7 +3,7 @@
 <jboss-ejb-client xmlns:xsi="urn:jboss:ejb-client:1.2" xsi:noNamespaceSchemaLocation="jboss-ejb-client_1_2.xsd">
   <client-context>
       <ejb-receivers>
-          <remoting-ejb-receiver outbound-connection-ref="remote-tx-ejb-connection"/>
+          <remoting-ejb-receiver outbound-connection-ref="remote-ejb-connection"/>
       </ejb-receivers>
   </client-context>
 </jboss-ejb-client>
