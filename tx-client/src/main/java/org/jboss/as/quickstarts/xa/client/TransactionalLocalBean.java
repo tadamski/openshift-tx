@@ -1,7 +1,11 @@
 package org.jboss.as.quickstarts.xa.client;
 
-import org.jboss.as.quickstarts.xa.server.StatefulRemote;
-import org.jboss.as.quickstarts.xa.server.StatelessRemote;
+import static javax.ejb.TransactionManagementType.BEAN;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.rmi.RemoteException;
+import java.util.Properties;
 
 import javax.annotation.Resource;
 import javax.ejb.Remote;
@@ -15,12 +19,9 @@ import javax.transaction.Status;
 import javax.transaction.SystemException;
 import javax.transaction.TransactionSynchronizationRegistry;
 import javax.transaction.UserTransaction;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.rmi.RemoteException;
-import java.util.Hashtable;
 
-import static javax.ejb.TransactionManagementType.BEAN;
+import org.jboss.as.quickstarts.xa.server.StatefulRemote;
+import org.jboss.as.quickstarts.xa.server.StatelessRemote;
 
 @Stateless
 @TransactionManagement(BEAN)
@@ -105,17 +106,19 @@ public class TransactionalLocalBean implements TransactionalLocal {
     }
 
     private Object lookupBean(String beanName, String viewClassName, boolean staeful) throws NamingException {
-        Hashtable properties = new Hashtable();
+    	Properties properties = new Properties();
+    	
+    	// remote lookup which does not utilize the remote binding
+        // Hashtable properties = new Hashtable();
+        // properties.put(javax.naming.Context.INITIAL_CONTEXT_FACTORY, "org.wildfly.naming.client.WildFlyInitialContextFactory");
+        // properties.put(javax.naming.Context.PROVIDER_URL,"http-remoting://localhost:8080");
 
-        properties.put(javax.naming.Context.INITIAL_CONTEXT_FACTORY, "org.wildfly.naming.client.WildFlyInitialContextFactory");
-        properties.put(javax.naming.Context.PROVIDER_URL,"http-remoting://localhost:8080");
-
-//        properties.put(javax.naming.Context.URL_PKG_PREFIXES, "org.jboss.ejb.client.naming");
+        properties.put(javax.naming.Context.URL_PKG_PREFIXES, "org.jboss.ejb.client.naming");
         javax.naming.Context jndiContext = new javax.naming.InitialContext(properties);
         // context.lookup("ejb:" + appName + "/" + moduleName + "/" + distinctName + "/" + beanName + "!" + viewClassName + "?stateful");
         String jndiName = String.format("ejb:/tx-server//%s!%s", beanName, viewClassName);
-        if (staeful)
-            jndiName += "?stateful";
+        if (staeful) jndiName += "?stateful";
+
         System.out.printf("looking up bean name %s%n", jndiName);
         return jndiContext.lookup(jndiName);
     }

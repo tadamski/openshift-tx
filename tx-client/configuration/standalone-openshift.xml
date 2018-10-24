@@ -385,7 +385,7 @@
             <endpoint/>
             <http-connector name="http-remoting-connector" connector-ref="default" security-realm="ApplicationRealm"/>
             <outbound-connections>
-                <remote-outbound-connection name="remote-ejb-connection" outbound-socket-binding-ref="remote-ejb" username="ejb" security-realm="ejb-security-realm">
+                <remote-outbound-connection name="remote-ejb-connection" outbound-socket-binding-ref="remote-ejb" username="ejb" security-realm="ejb-security-realm" protocol="http-remoting">
                     <properties>
                         <property name="SASL_POLICY_NOANONYMOUS" value="false"/>
                         <property name="SSL_ENABLED" value="false"/>
@@ -510,7 +510,7 @@
             <remote-destination host="localhost" port="25"/>
         </outbound-socket-binding>
         <outbound-socket-binding name="remote-ejb">
-            <remote-destination host="${tx.server.host}" port="4447"/>
+            <remote-destination host="${tx.server.host}" port="8080"/>
         </outbound-socket-binding>
     </socket-binding-group>
 </server>

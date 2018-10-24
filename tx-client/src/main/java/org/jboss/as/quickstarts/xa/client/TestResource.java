@@ -9,8 +9,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.SecurityContext;
 
-import javax.enterprise.context.ApplicationScoped;
-
 @Stateless
 // @ApplicationScoped
 @Path("ejb")
