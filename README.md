@@ -113,7 +113,16 @@ oc port-forward tx-client-3-jqn4x 8787:8787 &
 oc port-forward tx-server-4-rrr2l 8788:8788 &
 ```
 
-# rebuild
+# Re-build
+
 ```
-oc start-build tx-server -n eap-transactions
+# starting the new build which clones changes from github
+oc start-build tx-server
+# use '-n' to optionally to define namespace/project if you switched to a different one -n eap-transactions
+# use '--follow' to see in console output of the build (or later with 'oc logs build tx-server-#'
+
+# command to start new pod with the newly built code
+oc rollout latest tx-server
 ```
+
+NOTE: the same can be run for the `tx-client` service
