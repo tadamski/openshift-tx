@@ -92,11 +92,14 @@ public class TransactionalLocalBean implements TransactionalLocal {
         Properties properties = new Properties();
 
         // remote lookup which does not utilize the remote binding
-        // Hashtable properties = new Hashtable();
-        // properties.put(javax.naming.Context.INITIAL_CONTEXT_FACTORY, "org.wildfly.naming.client.WildFlyInitialContextFactory");
-        // properties.put(javax.naming.Context.PROVIDER_URL,"http-remoting://localhost:8080");
+        properties.put(javax.naming.Context.INITIAL_CONTEXT_FACTORY, "org.wildfly.naming.client.WildFlyInitialContextFactory");
+        String hostToConnect = System.getProperty("tx.server.host");
+        log.debugf("remote host to lookup at: " + hostToConnect);
+        properties.put(javax.naming.Context.PROVIDER_URL,"http-remoting://" + (hostToConnect == null ? "localhost" : hostToConnect) + ":8080");
 
-        properties.put(javax.naming.Context.URL_PKG_PREFIXES, "org.jboss.ejb.client.naming");
+        // locally works fine but on OpenShift it does not work for some reason?
+        // properties.put(javax.naming.Context.URL_PKG_PREFIXES, "org.jboss.ejb.client.naming");
+
         javax.naming.Context jndiContext = new javax.naming.InitialContext(properties);
         // context.lookup("ejb:" + appName + "/" + moduleName + "/" + distinctName + "/" + beanName + "!" + viewClassName + "?stateful");
         String jndiName = String.format("ejb:/tx-server//%s!%s", beanName, viewClassName);
