@@ -24,7 +24,7 @@ Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
   <name>Transaction Propagation between EJBs</name>
   <description>Test transaction propagation on OpenShift</description>
   <url>http://www.jboss.org/jbosstm</url>
- 
+
   <modules>
     <module>tx-server</module>
     <module>tx-client</module>

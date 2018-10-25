@@ -1,24 +1,3 @@
-/*
- * JBoss, Home of Professional Open Source.
- * Copyright 2011, Red Hat, Inc., and individual contributors
- * as indicated by the @author tags. See the copyright.txt file in the
- * distribution for a full listing of individual contributors.
- *
- * This is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
- * the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this software; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
- */
 package org.jboss.as.quickstarts.xa.server;
 
 import javax.annotation.Resource;
@@ -30,15 +9,15 @@ import javax.ejb.Stateful;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.transaction.TransactionSynchronizationRegistry;
+
+import org.jboss.logging.Logger;
+
 import java.rmi.RemoteException;
 
-/**
- * @author Stuart Douglas
- * @author Ivo Studensky
- */
 @Remote(StatefulRemote.class)
 @Stateful
 public class StatefulBean implements SessionSynchronization, StatefulRemote {
+    private static final Logger log = Logger.getLogger(StatefulBean.class);
 
     private Boolean commitSucceeded;
     private boolean beforeCompletion = false;
@@ -54,13 +33,13 @@ public class StatefulBean implements SessionSynchronization, StatefulRemote {
 
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public int transactionStatus() {
-        System.out.printf("StatefulBean:transactionStatus%n");
+        log.debug("StatefulBean:transactionStatus");
         return transactionSynchronizationRegistry.getTransactionStatus();
     }
 
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public void resetStatus() {
-        System.out.printf("StatefulBean:resetStatus%n");
+        log.debug("StatefulBean:resetStatul");
         commitSucceeded = null;
         beforeCompletion = false;
         transactionKey = null;
@@ -68,13 +47,13 @@ public class StatefulBean implements SessionSynchronization, StatefulRemote {
 
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public void setRollbackOnlyBeforeCompletion(boolean rollbackOnlyBeforeCompletion) throws RemoteException {
-        System.out.printf("StatefulBean:setRollbackOnlyBeforeCompletion%n");
+        log.debug("StatefulBean:setRollbackOnlyBeforeCompletion");
         this.rollbackOnlyBeforeCompletion = rollbackOnlyBeforeCompletion;
     }
 
     @TransactionAttribute(TransactionAttributeType.MANDATORY)
     public void sameTransaction(boolean first) throws RemoteException {
-        System.out.printf("StatefulBean:sameTransaction%n");
+        log.debug("StatefulBean:sameTransaction");
         if (first) {
             transactionKey = transactionSynchronizationRegistry.getTransactionKey();
         } else {
@@ -86,7 +65,7 @@ public class StatefulBean implements SessionSynchronization, StatefulRemote {
 
     @TransactionAttribute(TransactionAttributeType.MANDATORY)
     public void rollbackOnly() throws RemoteException {
-        System.out.printf("StatefulBean:rollbackOnly%n");
+        log.debug("StatefulBean:rollbackOnly");
         this.sessionContext.setRollbackOnly();
     }
 
@@ -99,7 +78,7 @@ public class StatefulBean implements SessionSynchronization, StatefulRemote {
     }
 
     public void beforeCompletion() throws EJBException, RemoteException {
-        System.out.printf("StatefulBean:beforeCompletion%n");
+        log.debug("StatefulBean:beforeCompletion");
         beforeCompletion = true;
 
         if (rollbackOnlyBeforeCompletion) {
@@ -108,7 +87,7 @@ public class StatefulBean implements SessionSynchronization, StatefulRemote {
     }
 
     public void afterCompletion(final boolean committed) throws EJBException, RemoteException {
-        System.out.printf("StatefulBean:afterCompletion%n");
+        log.debug("StatefulBean:afterCompletion");
         commitSucceeded = committed;
     }
 

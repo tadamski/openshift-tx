@@ -8,7 +8,7 @@ narayana source code is 4.17.39.Final (I think)
  cat ~/.minishift/config/config.json
  minishift start
  eval $(minishift oc-env)
- oc login -u developer -p developer # or oc login -u system:admin 
+ oc login -u developer -p developer # or oc login -u system:admin
  oc project eap-transactions
  minishift docker-env
  eval $(minishift docker-env)
@@ -55,7 +55,7 @@ curl -XGET 'http://tx-client-eap-transactions.192.168.99.100.nip.io/tx-client/ap
 
 ```
 oc build-logs tx-client-1
-# oc login -u system:admin 
+# oc login -u system:admin
 oc rsh `oc get pods -n tx-client | grep Running | awk '{print $1}'
 ```
 
@@ -109,7 +109,7 @@ To represent the user add the following to the server-identities definition `<se
 oc expose service tx-server
 oc set env dc/tx-server DEBUG=true # Enable the debug port
 oc get pods
-oc port-forward tx-client-3-jqn4x 8787:8787 & 
+oc port-forward tx-client-3-jqn4x 8787:8787 &
 oc port-forward tx-server-4-rrr2l 8788:8788 &
 ```
 

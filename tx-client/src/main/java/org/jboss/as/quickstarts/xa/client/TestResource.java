@@ -10,7 +10,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.SecurityContext;
 
 @Stateless
-// @ApplicationScoped
 @Path("ejb")
 public class TestResource {
     @EJB

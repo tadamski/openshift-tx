@@ -2,73 +2,65 @@ package org.jboss.as.quickstarts.xa.client;
 
 import static javax.ejb.TransactionManagementType.BEAN;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.rmi.RemoteException;
 import java.util.Properties;
 
 import javax.annotation.Resource;
 import javax.ejb.Remote;
 import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import javax.ejb.TransactionManagement;
 import javax.naming.NamingException;
-import javax.transaction.NotSupportedException;
 import javax.transaction.Status;
-import javax.transaction.SystemException;
 import javax.transaction.TransactionSynchronizationRegistry;
 import javax.transaction.UserTransaction;
 
 import org.jboss.as.quickstarts.xa.server.StatefulRemote;
 import org.jboss.as.quickstarts.xa.server.StatelessRemote;
+import org.jboss.logging.Logger;
 
 @Stateless
 @TransactionManagement(BEAN)
 @Remote (TransactionalLocal.class)
 public class TransactionalLocalBean implements TransactionalLocal {
+    private static final Logger log = Logger.getLogger(TransactionalLocalBean.class);
+
     @Resource
     private UserTransaction userTransaction;
 
     @Resource
     private TransactionSynchronizationRegistry transactionSynchronizationRegistry;
 
-    private StatelessRemote statelessRemote;
-
-    private StatefulRemote statefulEJB;
-
     @Override
-    @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public String transactionStatus() {
-            String message;
-
             try {
                 StatelessRemote bean = getTransactionalBean(
                         "StatelessBean", StatelessRemote.class.getCanonicalName());
 
-                assert Status.STATUS_NO_TRANSACTION == bean.transactionStatus() : "No transaction expected!";
+                // calling remote bean to find out the status of transaction
+                int status = bean.transactionStatus();
+                if(Status.STATUS_NO_TRANSACTION != status) {
+                    return "ERROR: No transaction expected but transaction status was " + stringForm(status);
+                }
+
+                // remote call transaction propagation
                 userTransaction.begin();
                 try {
-                    assert Status.STATUS_ACTIVE == bean.transactionStatus() : "Active transaction expected!";
+                    status = bean.call();
+                    if(status != Status.STATUS_ACTIVE) {
+                        return "ERROR: Active transaction expected but was " + stringForm(status);
+                    }
                 } finally {
                     userTransaction.rollback();
-                    message = "success";
                 }
-            } catch (RemoteException | NotSupportedException | SystemException | IllegalStateException |
-                    SecurityException | NamingException e) {
-                StringWriter sw = new StringWriter();
-                e.printStackTrace(new PrintWriter(sw));
-                message = sw.toString();
+            } catch (Exception e) {
+                log.error("Cannot call remote stateless ejb or rollback transaction", e);
+                return "ERROR: Error on calling remote ejb and rollbacking transaction";
             }
 
-            return message;
+            return "SUCCESS";
     }
 
     @Override
-    @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public String testSameTransactionEachCall() {
-        String message;
-
         try {
             StatefulRemote bean = getTransactionalStatefulBean(
                     "StatefulBean", StatefulRemote.class.getCanonicalName());
@@ -79,36 +71,27 @@ public class TransactionalLocalBean implements TransactionalLocal {
                 bean.sameTransaction(false);
             } finally {
                 userTransaction.rollback();
-                message = "success";
             }
-        } catch (NotSupportedException | SystemException | RemoteException | IllegalStateException | SecurityException
-                | NamingException e) {
-            StringWriter sw = new StringWriter();
-            e.printStackTrace(new PrintWriter(sw));
-            message = sw.toString();
+        } catch (Exception e) {
+            log.error("Cannot call remote stateful ejb or rollback transaction", e);
+            return "ERROR: Error on calling remote ejb and rollbacking transaction";
         }
 
-        return message;
+        return "SUCCESS";
     }
 
     private StatelessRemote getTransactionalBean(String beanName, String viewClassName) throws NamingException {
-        if (statelessRemote == null)
-            statelessRemote = (StatelessRemote) lookupBean(beanName, viewClassName, false);
-
-        return statelessRemote;
+        return (StatelessRemote) lookupBean(beanName, viewClassName, false);
     }
 
     private StatefulRemote getTransactionalStatefulBean(String beanName, String viewClassName) throws NamingException {
-        if (statefulEJB == null)
-            statefulEJB = (StatefulRemote) lookupBean(beanName, viewClassName, true);
-
-        return statefulEJB;
+        return (StatefulRemote) lookupBean(beanName, viewClassName, true);
     }
 
     private Object lookupBean(String beanName, String viewClassName, boolean staeful) throws NamingException {
-    	Properties properties = new Properties();
-    	
-    	// remote lookup which does not utilize the remote binding
+        Properties properties = new Properties();
+
+        // remote lookup which does not utilize the remote binding
         // Hashtable properties = new Hashtable();
         // properties.put(javax.naming.Context.INITIAL_CONTEXT_FACTORY, "org.wildfly.naming.client.WildFlyInitialContextFactory");
         // properties.put(javax.naming.Context.PROVIDER_URL,"http-remoting://localhost:8080");
@@ -119,7 +102,7 @@ public class TransactionalLocalBean implements TransactionalLocal {
         String jndiName = String.format("ejb:/tx-server//%s!%s", beanName, viewClassName);
         if (staeful) jndiName += "?stateful";
 
-        System.out.printf("looking up bean name %s%n", jndiName);
+        log.infof("looking up bean name %s", jndiName);
         return jndiContext.lookup(jndiName);
     }
 

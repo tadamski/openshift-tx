@@ -11,7 +11,7 @@ set -e
 # git add -u && git commit -m "config" && git push origin master
 
 # Cleaning OpenShift namespace from the older attempts
-oc delete is,bc,dc,service tx-server 
+oc delete is,bc,dc,service tx-server
 # New application which clones the github repository and deploy the build to EAP 7.1
 oc new-app jboss-eap-71~https://github.com/mmusgrov/openshift-tx.git#eap71 --context-dir='tx-server' --name='tx-server' --labels name='tx-server'
 
