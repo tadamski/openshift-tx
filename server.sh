@@ -27,13 +27,15 @@ oc new-app jboss-eap-71~https://github.com/ochaloup/openshift-tx.git#eap71 --con
 
 # To refresh the state of the service - aka. scaledown the current docker image and start a new one
 #   oc rollout latest tx-server
-# but the last build is used. If there were changes on github you need build new one first
+# But(!) the last build is used. If there were changes on github you need build new one first
 #   oc start-build tx-server
+# If you want to build at your local computer then you can do
+#   cd <path-to-cloned-github>/openshift-tx
+#   oc start-build tx-server --from-dir=. --follow
 
 # To get logger output at tx-server from the enlisted XA resource the easiest option is to
 #  log to the pod and switch the logging category
 #  oc get pods
 #  oc rsh tx-server-###
-#   /opt/eap/bin/jboss-cli.sh -c
-#    /subsystem=logging/logger=org.jboss.as.quickstarts:add(level=TRACE)
+#   /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.as.quickstarts:add(level=TRACE)'
 

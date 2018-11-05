@@ -13,8 +13,11 @@ oc delete is,bc,dc,service tx-client
 # New application which clones the github repository and deploy the build to EAP 7.1
 #  passing environment variable which is attached to any starting Java program aka. to starting JBoss EAP server
 #  the value of the 'tx.server.host' is used to determine the address where client connects to
+#  The value of the 'jboss.default.multicast.address' is needed to be changed to be different from what 'tx-server' container
+#  has set (by default it has 230.0.0.4). Otherwise the ejb client tries to loadbalance over all containers in the cluster of the same multicast group.
 oc new-app jboss-eap-71~https://github.com/ochaloup/openshift-tx.git#eap71 --context-dir='tx-client' --name='tx-client' --labels name='tx-client'\
-  -e JAVA_OPTS_APPEND='-Dtx.server.host=tx-server.eap-transactions.svc.cluster.local'
+  -e JAVA_OPTS_APPEND='-Dtx.server.host=tx-server.eap-transactions.svc.cluster.local -Djboss.default.multicast.address=230.0.0.5'
+
 # Environment variable can be added/changed later too
 # oc env dc/tx-client JAVA_OPTS_APPEND="-Dtx.server.host=tx-server.eap-transactions.svc.cluster.local"
 # To check the build process by overviewing logs

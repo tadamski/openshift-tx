@@ -41,6 +41,14 @@ public class TransactionalLocalBean implements TransactionalLocal {
                     return "ERROR: No transaction expected but transaction status was " + stringForm(status);
                 }
 
+                // this is pretty strange. If we use the bean looked-up at the top of the method
+                //   then 'lookupBean' with "org.jboss.ejb.client.naming" does not work to run here the second call
+                //   if we use the new lookup here then the call works fine :-/
+                //   When running as standalone application this new lookup is not necessary and the bean can be reused.
+                // bean = getTransactionalBean("StatelessBean", StatelessRemote.class.getCanonicalName());
+                // -> ok, the reason was that ther needs to be configured different ha group otherwise the second
+                //    call goes to the server in the group which could be client itself instead of targetting only server
+
                 // remote call transaction propagation
                 userTransaction.begin();
                 try {
@@ -92,13 +100,12 @@ public class TransactionalLocalBean implements TransactionalLocal {
         Properties properties = new Properties();
 
         // remote lookup which does not utilize the remote binding
-        properties.put(javax.naming.Context.INITIAL_CONTEXT_FACTORY, "org.wildfly.naming.client.WildFlyInitialContextFactory");
-        String hostToConnect = System.getProperty("tx.server.host");
-        log.debugf("remote host to lookup at: " + hostToConnect);
-        properties.put(javax.naming.Context.PROVIDER_URL,"http-remoting://" + (hostToConnect == null ? "localhost" : hostToConnect) + ":8080");
+        // properties.put(javax.naming.Context.INITIAL_CONTEXT_FACTORY, "org.wildfly.naming.client.WildFlyInitialContextFactory");
+        // String hostToConnect = System.getProperty("tx.server.host");
+        // log.debugf("remote host to lookup at: " + hostToConnect);
+        // properties.put(javax.naming.Context.PROVIDER_URL,"http-remoting://" + (hostToConnect == null ? "localhost" : hostToConnect) + ":8080");
 
-        // locally works fine but on OpenShift it does not work for some reason?
-        // properties.put(javax.naming.Context.URL_PKG_PREFIXES, "org.jboss.ejb.client.naming");
+        properties.put(javax.naming.Context.URL_PKG_PREFIXES, "org.jboss.ejb.client.naming");
 
         javax.naming.Context jndiContext = new javax.naming.InitialContext(properties);
         // context.lookup("ejb:" + appName + "/" + moduleName + "/" + distinctName + "/" + beanName + "!" + viewClassName + "?stateful");
