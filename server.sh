@@ -39,3 +39,5 @@ oc new-app jboss-eap-71~https://github.com/ochaloup/openshift-tx.git#eap71 --con
 #  oc rsh tx-server-###
 #   /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.as.quickstarts:add(level=TRACE)'
 
+# To find out the list of the members of the cluster view
+#  /subsystem=jgroups/channel=ee:read-resource(include-runtime=true, recursive=true)

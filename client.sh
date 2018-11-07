@@ -44,7 +44,15 @@ curl -XGET 'http://tx-client-eap-transactions.192.168.99.100.nip.io/tx-client/ap
 # checking what data was used to start the particular pod
 #   oc describe pod tx-client-###
 
-##
+# to change the logging to see what happening on remote call change the logging
+#  oc get pods
+#  oc rsh tx-client-###
+#    /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.ejb.client:add(level=TRACE)'
+#    /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.as.remoting:add(level=TRACE)'
+#    /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.remoting3:add(level=TRACE)'
+#    /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.ejb.protocol.remote:add(level=TRACE)'
+
+
 TODO!!
 # After calling curl you should get response 'success', try to scale down the tx-server
 # oc scale dc tx-server --replicas=0

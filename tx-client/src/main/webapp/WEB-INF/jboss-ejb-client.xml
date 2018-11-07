@@ -1,9 +1,23 @@
 <?xml version='1.0' encoding='UTF-8'?>
 
+<!-- check about cluster here: https://access.redhat.com/documentation/en-us/red_hat_jboss_enterprise_application_platform/7.1/html/developing_ejb_applications/clustered_enterprise_javabeans#standalone_and_in_server_client_configuration -->
 <jboss-ejb-client xmlns:xsi="urn:jboss:ejb-client:1.2" xsi:noNamespaceSchemaLocation="jboss-ejb-client_1_2.xsd">
   <client-context>
       <ejb-receivers>
           <remoting-ejb-receiver outbound-connection-ref="remote-ejb-connection"/>
+          <!--<remoting-ejb-receiver outbound-connection-ref="remote-ejb-connection2"/>-->
       </ejb-receivers>
+
+      <!--
+      <clusters>
+          <cluster name="ejb" security-realm="ejb-security-realm" username="ejb">
+              <connection-creation-options>
+                  <property name="org.xnio.Options.SSL_ENABLED" value="false" />
+                  <property name="org.xnio.Options.SASL_POLICY_NOANONYMOUS" value="false" />
+              </connection-creation-options>
+          </cluster>
+      </clusters>
+      -->
+
   </client-context>
 </jboss-ejb-client>
