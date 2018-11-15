@@ -37,6 +37,10 @@ curl -XGET 'http://tx-client-eap-transactions.192.168.99.100.nip.io/tx-client/ap
 #   oc start-build tx-client -f
 # if there were some changes then a new image is pushed to image stream and new deployment
 #  should be exectued by default (aka. 'oc rollout' is not necessary)
+# If you want to build at your local computer then you can do
+#   cd <path-to-cloned-github>/openshift-tx
+#   oc start-build tx-client --from-dir=. --follow
+
 # check the state of the imagestream related to the deployment via
 #   oc describe is tx-client
 # checking hitory of the building of the docker image for the service
@@ -52,8 +56,3 @@ curl -XGET 'http://tx-client-eap-transactions.192.168.99.100.nip.io/tx-client/ap
 #    /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.remoting3:add(level=TRACE)'
 #    /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.ejb.protocol.remote:add(level=TRACE)'
 
-
-TODO!!
-# After calling curl you should get response 'success', try to scale down the tx-server
-# oc scale dc tx-server --replicas=0
-# and the curl returns

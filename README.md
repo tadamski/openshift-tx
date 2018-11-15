@@ -249,3 +249,23 @@ and configure the `jboss-ejb-client.xml` descriptor with that
 ```
 cp tx-server/target/tx-server.war ~/tmp/wfly-server1/standalone/deployments/;cp tx-server/target/tx-server.war ~/tmp/wfly-server2/standalone/deployments/;cp tx-client/target/tx-client.war ~/tmp/wfly-client/standalone/deployments
 ```
+
+To set-up a logging to see information about the quickstart processing and the remoting processing
+
+```
+for I in `oc get pods | grep Running | grep 'tx-server' | awk '{print $1}'`; do
+  oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.as.quickstarts:add(level=TRACE)'
+done
+```
+and
+
+```
+for I in `oc get pods | grep Running | grep 'tx-client' | awk '{print $1}'`; do
+  oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.as.quickstarts:add(level=TRACE)'
+  oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.ejb.client:add(level=TRACE)'
+  oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.as.remoting:add(level=TRACE)'
+  oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.remoting3:add(level=TRACE)'
+  oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.ejb.protocol.remote:add(level=TRACE)'
+  oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jgroups.protocols.kubernetes:add(level=TRACE)'
+done
+```

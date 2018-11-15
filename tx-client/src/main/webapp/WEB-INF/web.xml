@@ -8,5 +8,5 @@
     <url-pattern>/api/*</url-pattern>
   </servlet-mapping>
 
-  <distributable/>
+  <!-- <distributable/>  -->
 </web-app>
