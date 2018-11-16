@@ -37,6 +37,7 @@ public class TransactionalLocalBean implements TransactionalLocal {
 
                 // calling remote bean to find out the status of transaction
                 int status = bean.transactionStatus();
+                log.debugf("Transaction status from 'transactionStatus' is %s", status);
                 if(Status.STATUS_NO_TRANSACTION != status) {
                     return "ERROR: No transaction expected but transaction status was " + stringForm(status);
                 }
@@ -53,6 +54,7 @@ public class TransactionalLocalBean implements TransactionalLocal {
                 userTransaction.begin();
                 try {
                     status = bean.call();
+                    log.debugf("Transaction status from 'call' is %s", status);
                     if(status != Status.STATUS_ACTIVE) {
                         return "ERROR: Active transaction expected but was " + stringForm(status);
                     }

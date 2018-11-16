@@ -261,11 +261,24 @@ and
 
 ```
 for I in `oc get pods | grep Running | grep 'tx-client' | awk '{print $1}'`; do
-  oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.as.quickstarts:add(level=TRACE)'
-  oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.ejb.client:add(level=TRACE)'
-  oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.as.remoting:add(level=TRACE)'
-  oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.remoting3:add(level=TRACE)'
-  oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.ejb.protocol.remote:add(level=TRACE)'
-  oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jgroups.protocols.kubernetes:add(level=TRACE)'
+  oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.as.quickstarts:add(level=TRACE)'&
+  oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.ejb.client:add(level=TRACE)'&
+  oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.as.remoting:add(level=TRACE)'&
+  oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.remoting3:add(level=TRACE)'&
+  oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.ejb.protocol.remote:add(level=TRACE)'&
+  oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jgroups.protocols.kubernetes:add(level=TRACE)'&
 done
 ```
+
+### TODO - configure kube ping clustering
+
+```
+oc set env dc/tx-client OPENSHIFT_KUBE_PING_LABELS='app=tx-client' OPENSHIFT_KUBE_PING_NAMESPACE='eap-transactions'
+oc set env dc/tx-server OPENSHIFT_KUBE_PING_LABELS='app=tx-server' OPENSHIFT_KUBE_PING_NAMESPACE='eap-transactions'
+```
+
+How to create cluster selector for ejb client
+
+* http://git.app.eng.bos.redhat.com/git/jbossqe/eap-tests-ejb.git/tree/ejb-multi-server-ts/src/test/java/org/jboss/qa/ejb/tests/clusternodeselector/ClusterNodeSelectorTestCase.java#n98
+* http://git.app.eng.bos.redhat.com/git/jbossqe/eap-tests-ejb.git/tree/ejb-multi-server-ts/src/test/java/org/jboss/qa/ejb/tests/clusternodeselector/CustomClusterNodeSelector.java
+* cluster node selector in `jboss-ejb-client.xml` : https://developer.jboss.org/thread/198898
