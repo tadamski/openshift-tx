@@ -1,0 +1,219 @@
+kind: Template
+apiVersion: v1
+metadata:
+  name: statefulset-ejb3-remoting
+  annotations:
+    openshift.io/display-name: "EJB3 remoting with statefulset setup"
+    description: "How the EJB3 remoting works with statefulset"
+    iconClass: "icon-eap"
+    tags: "eap,javaee,java,jboss"
+  message: "A new JBoss EJB3 remoting example with StatefulSets was deployed"
+
+parameters:
+  - name: CLIENT_APPLICATION
+    displayName: "Client application name"
+    value: "tx-client"
+    required: true
+  - name: SERVER_APPLICATION
+    displayName: "Server application name"
+    value: "tx-server"
+    required: true
+  - name: MEMORY_LIMIT
+    displayName: "Container memory limit"
+    value: "1Gi"
+    required: false
+  - name: SOURCE_REPOSITORY_URL
+    displayName: Git Repository URL
+    description: Git source URI for application
+    value: https://github.com/ochaloup/txn-propagation-openshift.git
+    required: true
+  - name: SOURCE_REPOSITORY_REF
+    displayName: Git Reference
+    description: Git branch/tag reference
+    value: 'eap71'
+    required: false
+  - name: CONTEXT_DIR_CLIENT
+    displayName: Context Directory
+    description: Path within Git project to build; empty for root project directory.
+    value: 'tx-client'
+    required: false
+  - name: CONTEXT_DIR_SERVER
+    displayName: Context Directory
+    description: Path within Git project to build; empty for root project directory.
+    value: 'tx-server'
+    required: false
+  - name: CUSTOM_INSTALL_DIRECTORIES
+    displayName: Custom install directories (see documentation).
+    description: Additional directories from which to install.
+    value: extensions/*
+    required: false
+  - name: MAVEN_MIRROR_URL
+    displayName: Maven mirror URL
+    description: Maven mirror to use for S2I builds
+    value: ''
+    required: false
+  - name: MAVEN_ARGS_APPEND
+    displayName: Maven Additional Arguments
+    description: Maven additional arguments to use for S2I builds
+    value: ''
+    required: false
+  - name: ARTIFACT_DIR
+    description: List of directories from which archives will be copied into the deployment folder. If unspecified, all archives in /target will be copied.
+    value: ''
+    required: false
+  - name: IMAGE_STREAM_NAMESPACE
+    displayName: ImageStream Namespace
+    description: Default is without any namaspace. Middleware goes usually to openshift namespace.
+    value: ''
+    required: false
+  - name: GITHUB_WEBHOOK_SECRET
+    displayName: Github Webhook Secret
+    description: GitHub trigger secret
+    from: "[a-zA-Z0-9]{8}"
+    generate: expression
+    required: true
+  - name: GENERIC_WEBHOOK_SECRET
+    displayName: Generic Webhook Secret
+    description: Generic build trigger secret
+    from: "[a-zA-Z0-9]{8}"
+    generate: expression
+    required: true
+
+objects:
+  - kind: Service
+    apiVersion: v1
+    metadata:
+      name: "${CLIENT_APPLICATION}"
+      labels:
+        application: "${CLIENT_APPLICATION}"
+      annotations:
+        description: "Service for client"
+    spec:
+      clusterIP: None
+      ports:
+        - name: eap-http
+          port: 8080
+          targetPort: 8080
+      selector:
+        application: "${CLIENT_APPLICATION}"
+
+  - kind: Service
+    apiVersion: v1
+    metadata:
+      name: "${SERVER_APPLICATION}"
+      labels:
+        application: "${SERVER_APPLICATION}"
+      annotations:
+        description: "Service for server"
+    spec:
+      clusterIP: None
+      ports:
+        - name: eap-http
+          port: 8080
+          targetPort: 8080
+      selector:
+        application: "${SERVER_APPLICATION}"
+
+
+  - kind: StatefulSet
+    apiVersion: apps/v1
+    metadata:
+      application: "${CLIENT_APPLICATION}"
+    spec:
+      serviceName: "${CLIENT_APPLICATION}"
+      replicas: 1
+      selector:
+        matchLabels:
+          application: "${CLIENT_APPLICATION}"
+      template:
+        metadata:
+          name: "${CLIENT_APPLICATION}"
+          labels:
+            application: "${CLIENT_APPLICATION}"
+          # https://docs.openshift.com/container-platform/3.11/dev_guide/managing_images.html#using-is-with-k8s
+          annotations:
+            alpha.image.policy.openshift.io/resolve-names: '*'
+        spec:
+          containers:
+            - name: tx-client
+              image: "${CLIENT_APPLICATION}"
+              resources:
+                limits:
+                  memory: "${MEMORY_LIMIT}"
+              ports:
+                - containerPort: 8778
+                  name: "jolokia"
+                  protocol: "TCP"
+                - containerPort: 8080
+                  name: "http"
+                  protocol: "TCP"
+                - containerPort: 8888
+                  name: "ping"
+                  protocol: "TCP"
+              livenessProbe:
+                initialDelaySeconds: 60
+                exec:
+                  command:
+                    - "/bin/bash"
+                    - "-c"
+                    - "/opt/eap/bin/livenessProbe.sh"
+              readinessProbe:
+                initialDelaySeconds: 10
+                exec:
+                  command:
+                    - "/bin/bash"
+                    - "-c"
+                    - "/opt/eap/bin/readinessProbe.sh"
+
+  - kind: ImageStream
+    apiVersion: v1
+    metadata:
+      name: "${CLIENT_APPLICATION}"
+      labels:
+        application: "${CLIENT_APPLICATION}"
+
+  - kind: BuildConfig
+    apiVersion: v1
+    metadata:
+      name: "${CLIENT_APPLICATION}"
+      labels:
+        application: "${CLIENT_APPLICATION}"
+    spec:
+      source:
+        type: Git
+        git:
+          uri: "${SOURCE_REPOSITORY_URL}"
+          ref: "${SOURCE_REPOSITORY_REF}"
+        contextDir: "${CONTEXT_DIR_CLIENT}"
+      strategy:
+        type: Source
+        sourceStrategy:
+          env:
+          - name: MAVEN_MIRROR_URL
+            value: "${MAVEN_MIRROR_URL}"
+          - name: MAVEN_ARGS_APPEND
+            value: "${MAVEN_ARGS_APPEND}"
+          - name: ARTIFACT_DIR
+            value: "${ARTIFACT_DIR}"
+          forcePull: true
+          incremental: true
+          # oc import-image eap-cd-openshift --from=registry.access.redhat.com/jboss-eap-7-tech-preview/eap-cd-openshift:14 --confirm
+          from:
+            kind: ImageStreamTag
+            namespace: "${IMAGE_STREAM_NAMESPACE}"
+            name: eap-cd-openshift:14
+      output:
+        to:
+          kind: ImageStreamTag
+          name: "${CLIENT_APPLICATION}:latest"
+      triggers:
+      - type: GitHub
+        github:
+          secret: "${GITHUB_WEBHOOK_SECRET}"
+      - type: Generic
+        generic:
+          secret: "${GENERIC_WEBHOOK_SECRET}"
+      - type: ImageChange
+        imageChange: {}
+      - type: ConfigChange
+
