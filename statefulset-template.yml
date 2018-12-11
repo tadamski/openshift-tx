@@ -355,3 +355,29 @@ objects:
         imageChange: {}
       - type: ConfigChange
 
+
+  # allow the default service account to list pods
+  - apiVersion: v1
+    kind: Role
+    metadata:
+      name: pods-listing
+    rules:
+    - apiGroups: null
+      attributeRestrictions: null
+      resources: ["pods"]
+      verbs: ["list"]
+  - apiVersion: v1
+    kind: RoleBinding
+    metadata:
+      name: default
+      annotations:
+        description: "Role binding for the default service account"
+    subjects:
+    - kind: ServiceAccount
+      name: default
+      namespace: ${IMAGE_STREAM_NAMESPACE} # TODO: this is probably needed but could be configured as different evn var
+    roleRef:
+      kind: Role
+      name: pods-listing
+      namespace: ${IMAGE_STREAM_NAMESPACE}
+
