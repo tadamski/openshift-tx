@@ -14,10 +14,33 @@ parameters:
     displayName: "Client application name"
     value: "tx-client"
     required: true
+  - name: CLIENT_CONTEXT_DIR
+    displayName: Context Directory
+    description: Path within Git project to build; empty for root project directory.
+    value: 'tx-client'
+    required: false
+  - name: CLIENT_KUBE_PING_LABELS
+    displayName: Labels for Kube ping for client eap
+    value: "application=${CLIENT_APPLICATION}"
+    required: false
   - name: SERVER_APPLICATION
     displayName: "Server application name"
     value: "tx-server"
     required: true
+  - name: SERVER_CONTEXT_DIR
+    displayName: Context Directory
+    description: Path within Git project to build; empty for root project directory.
+    value: 'tx-server'
+    required: false
+  - name: SERVER_KUBE_PING_LABELS
+    displayName: Labels for Kube ping for server eap
+    value: "application=${SERVER_APPLICATION}"
+    required: false
+  - name: KUBE_PING_NAMESPACE
+    displayName: Namespace for Kube ping protocol
+    description: What is namespace for Kube ping protocol, usually the project name of the deployments.
+    value: 'myproject'
+    required: false
   - name: MEMORY_LIMIT
     displayName: "Container memory limit"
     value: "1Gi"
@@ -31,16 +54,6 @@ parameters:
     displayName: Git Reference
     description: Git branch/tag reference
     value: 'eap71'
-    required: false
-  - name: CONTEXT_DIR_CLIENT
-    displayName: Context Directory
-    description: Path within Git project to build; empty for root project directory.
-    value: 'tx-client'
-    required: false
-  - name: CONTEXT_DIR_SERVER
-    displayName: Context Directory
-    description: Path within Git project to build; empty for root project directory.
-    value: 'tx-server'
     required: false
   - name: CUSTOM_INSTALL_DIRECTORIES
     displayName: Custom install directories (see documentation).
@@ -63,7 +76,7 @@ parameters:
     required: false
   - name: IMAGE_STREAM_NAMESPACE
     displayName: ImageStream Namespace
-    description: Default is without any namaspace. Middleware goes usually to openshift namespace.
+    description: Default is without any namespace. Middleware goes usually to openshift namespace. It is where EAP image is searched at.
     value: 'openshift'
     required: false
   - name: GITHUB_WEBHOOK_SECRET
@@ -138,6 +151,10 @@ objects:
           containers:
             - name: tx-client
               env:
+                - name: OPENSHIFT_KUBE_PING_NAMESPACE
+                  value: "${KUBE_PING_NAMESPACE}"
+                - name: OPENSHIFT_KUBE_PING_LABELS
+                  value: "${CLIENT_KUBE_PING_LABELS}"
                 - name: JAVA_OPTS_APPEND
                   value: "-Dtx.server.host=${SERVER_APPLICATION} -Djboss.default.multicast.address=230.0.0.5"
               image: "${CLIENT_APPLICATION}"
@@ -188,7 +205,7 @@ objects:
         git:
           uri: "${SOURCE_REPOSITORY_URL}"
           ref: "${SOURCE_REPOSITORY_REF}"
-        contextDir: "${CONTEXT_DIR_CLIENT}"
+        contextDir: "${CLIENT_CONTEXT_DIR}"
       strategy:
         type: Source
         sourceStrategy:
