@@ -123,6 +123,19 @@ objects:
       selector:
         application: "${SERVER_APPLICATION}"
 
+  - kind: Route
+    apiVersion: v1
+    id: "${CLIENT_APPLICATION}-http"
+    metadata:
+      name: "${CLIENT_APPLICATION}"
+      labels:
+        application: "${CLIENT_APPLICATION}"
+      annotations:
+        description: Route for the tx-client application http service.
+    spec:
+      to:
+        name: "${CLIENT_APPLICATION}"
+
 
   - kind: StatefulSet
     apiVersion: apps/v1
