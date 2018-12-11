@@ -137,6 +137,9 @@ objects:
         spec:
           containers:
             - name: tx-client
+              env:
+                - name: JAVA_OPTS_APPEND
+                  value: "-Dtx.server.host=${SERVER_APPLICATION} -Djboss.default.multicast.address=230.0.0.5"
               image: "${CLIENT_APPLICATION}"
               resources:
                 limits:
