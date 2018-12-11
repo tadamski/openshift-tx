@@ -576,13 +576,6 @@
             </resource-adapters>
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:sar:1.0"/>
-        <subsystem xmlns="urn:jboss:domain:security-manager:1.0">
-            <deployment-permissions>
-                <maximum-set>
-                    <permission class="java.security.AllPermission"/>
-                </maximum-set>
-            </deployment-permissions>
-        </subsystem>
         <subsystem xmlns="urn:jboss:domain:security:2.0">
             
             <security-domains>
