@@ -254,7 +254,7 @@ objects:
       application: "${SERVER_APPLICATION}"
     spec:
       serviceName: "${SERVER_APPLICATION}"
-      replicas: 1
+      replicas: 2
       selector:
         matchLabels:
           application: "${SERVER_APPLICATION}"
