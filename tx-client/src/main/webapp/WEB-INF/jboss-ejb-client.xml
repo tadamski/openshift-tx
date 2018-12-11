@@ -4,6 +4,7 @@
 <jboss-ejb-client xmlns:xsi="urn:jboss:ejb-client:1.2" xsi:noNamespaceSchemaLocation="jboss-ejb-client_1_2.xsd">
   <client-context>
       <ejb-receivers> <!-- exclude-local-receiver="true" -->
+          <!-- what about using url in format: ejb.jboss:remoting+http://hostname:port;cluster=clustername, see https://issues.jboss.org/browse/EJBCLIENT-216 -->
           <remoting-ejb-receiver outbound-connection-ref="remote-ejb-connection"/>
           <!--<remoting-ejb-receiver outbound-connection-ref="remote-ejb-connection2"/>-->
       </ejb-receivers>

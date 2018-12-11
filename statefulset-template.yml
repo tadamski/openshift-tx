@@ -87,6 +87,10 @@ parameters:
     from: "[a-zA-Z0-9]{8}"
     generate: expression
     required: true
+  - name: SCRIPT_DEBUG
+    description: Running OpenShift EAP scripts with set -x
+    value: "false"
+    required: false
 
 objects:
   - kind: Service
@@ -165,7 +169,9 @@ objects:
                 - name: OPENSHIFT_KUBE_PING_LABELS
                   value: "application=${CLIENT_APPLICATION}"
                 - name: JAVA_OPTS_APPEND
-                  value: "-Dtx.server.host=${SERVER_APPLICATION} -Djboss.default.multicast.address=230.0.0.5"
+                  value: "-Dtx.server.host=${SERVER_APPLICATION} -Djboss.default.multicast.address=230.0.0.5" # consider removing multicast.address parameter
+                - name: SCRIPT_DEBUG
+                  value: "${SCRIPT_DEBUG}"
               image: "${CLIENT_APPLICATION}"
               resources:
                 limits:
@@ -274,7 +280,9 @@ objects:
                 - name: OPENSHIFT_KUBE_PING_LABELS
                   value: "application=${SERVER_APPLICATION}"
                 - name: JAVA_OPTS_APPEND
-                  value: "-Dtx.server.host=${SERVER_APPLICATION} -Djboss.default.multicast.address=230.0.0.6"
+                  value: "-Dtx.server.host=${SERVER_APPLICATION} -Djboss.default.multicast.address=230.0.0.6" 
+                - name: SCRIPT_DEBUG
+                  value: "${SCRIPT_DEBUG}"
               image: "${SERVER_APPLICATION}"
               resources:
                 limits:

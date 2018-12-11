@@ -439,8 +439,8 @@
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:jdr:1.0"/>
         <subsystem xmlns="urn:jboss:domain:jgroups:6.0">
-            <channels default="ee">
-                <channel name="ee" stack="tcp"/>
+            <channels default="ee-client">
+                <channel name="ee-client" stack="tcp"/>
             </channels>
             <stacks>
                 <stack name="udp">
