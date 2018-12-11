@@ -19,10 +19,6 @@ parameters:
     description: Path within Git project to build; empty for root project directory.
     value: 'tx-client'
     required: false
-  - name: CLIENT_KUBE_PING_LABELS
-    displayName: Labels for Kube ping for client eap
-    value: "application=${CLIENT_APPLICATION}"
-    required: false
   - name: SERVER_APPLICATION
     displayName: "Server application name"
     value: "tx-server"
@@ -31,10 +27,6 @@ parameters:
     displayName: Context Directory
     description: Path within Git project to build; empty for root project directory.
     value: 'tx-server'
-    required: false
-  - name: SERVER_KUBE_PING_LABELS
-    displayName: Labels for Kube ping for server eap
-    value: "application=${SERVER_APPLICATION}"
     required: false
   - name: KUBE_PING_NAMESPACE
     displayName: Namespace for Kube ping protocol
@@ -78,6 +70,10 @@ parameters:
     displayName: ImageStream Namespace
     description: Default is without any namespace. Middleware goes usually to openshift namespace. It is where EAP image is searched at.
     value: 'openshift'
+    required: false
+  - name: IMAGE_NAME
+    description: Image of EAP which will be search in the IMAGE_STREAM_NAMESPACE and application will run at
+    value: 'eap-cd-openshift:14'
     required: false
   - name: GITHUB_WEBHOOK_SECRET
     displayName: Github Webhook Secret
@@ -154,7 +150,7 @@ objects:
                 - name: OPENSHIFT_KUBE_PING_NAMESPACE
                   value: "${KUBE_PING_NAMESPACE}"
                 - name: OPENSHIFT_KUBE_PING_LABELS
-                  value: "${CLIENT_KUBE_PING_LABELS}"
+                  value: "application=${CLIENT_APPLICATION}"
                 - name: JAVA_OPTS_APPEND
                   value: "-Dtx.server.host=${SERVER_APPLICATION} -Djboss.default.multicast.address=230.0.0.5"
               image: "${CLIENT_APPLICATION}"
@@ -218,15 +214,123 @@ objects:
             value: "${ARTIFACT_DIR}"
           forcePull: true
           incremental: true
-          # oc import-image eap-cd-openshift --from=registry.access.redhat.com/jboss-eap-7-tech-preview/eap-cd-openshift:14 --confirm
           from:
             kind: ImageStreamTag
             namespace: "${IMAGE_STREAM_NAMESPACE}"
-            name: eap-cd-openshift:14
+            name: "${IMAGE_NAME}"
       output:
         to:
           kind: ImageStreamTag
           name: "${CLIENT_APPLICATION}:latest"
+      triggers:
+      - type: GitHub
+        github:
+          secret: "${GITHUB_WEBHOOK_SECRET}"
+      - type: Generic
+        generic:
+          secret: "${GENERIC_WEBHOOK_SECRET}"
+      - type: ImageChange
+        imageChange: {}
+      - type: ConfigChange
+
+
+  - kind: StatefulSet
+    apiVersion: apps/v1
+    metadata:
+      name: "${SERVER_APPLICATION}"
+      application: "${SERVER_APPLICATION}"
+    spec:
+      serviceName: "${SERVER_APPLICATION}"
+      replicas: 1
+      selector:
+        matchLabels:
+          application: "${SERVER_APPLICATION}"
+      template:
+        metadata:
+          name: "${SERVER_APPLICATION}"
+          labels:
+            application: "${SERVER_APPLICATION}"
+          annotations:
+            alpha.image.policy.openshift.io/resolve-names: '*'
+        spec:
+          containers:
+            - name: tx-server
+              env:
+                - name: OPENSHIFT_KUBE_PING_NAMESPACE
+                  value: "${KUBE_PING_NAMESPACE}"
+                - name: OPENSHIFT_KUBE_PING_LABELS
+                  value: "application=${SERVER_APPLICATION}"
+                - name: JAVA_OPTS_APPEND
+                  value: "-Dtx.server.host=${SERVER_APPLICATION} -Djboss.default.multicast.address=230.0.0.6"
+              image: "${SERVER_APPLICATION}"
+              resources:
+                limits:
+                  memory: "${MEMORY_LIMIT}"
+              ports:
+                - containerPort: 8778
+                  name: "jolokia"
+                  protocol: "TCP"
+                - containerPort: 8080
+                  name: "http"
+                  protocol: "TCP"
+                - containerPort: 8888
+                  name: "ping"
+                  protocol: "TCP"
+              livenessProbe:
+                initialDelaySeconds: 60
+                exec:
+                  command:
+                    - "/bin/bash"
+                    - "-c"
+                    - "/opt/eap/bin/livenessProbe.sh"
+              readinessProbe:
+                initialDelaySeconds: 10
+                exec:
+                  command:
+                    - "/bin/bash"
+                    - "-c"
+                    - "/opt/eap/bin/readinessProbe.sh"
+
+  - kind: ImageStream
+    apiVersion: v1
+    metadata:
+      name: "${SERVER_APPLICATION}"
+      labels:
+        application: "${SERVER_APPLICATION}"
+
+  - kind: BuildConfig
+    apiVersion: v1
+    metadata:
+      name: "${SERVER_APPLICATION}"
+      labels:
+        application: "${SERVER_APPLICATION}"
+    spec:
+      source:
+        type: Git
+        git:
+          uri: "${SOURCE_REPOSITORY_URL}"
+          ref: "${SOURCE_REPOSITORY_REF}"
+        contextDir: "${SERVER_CONTEXT_DIR}"
+      strategy:
+        type: Source
+        sourceStrategy:
+          env:
+          - name: MAVEN_MIRROR_URL
+            value: "${MAVEN_MIRROR_URL}"
+          - name: MAVEN_ARGS_APPEND
+            value: "${MAVEN_ARGS_APPEND}"
+          - name: ARTIFACT_DIR
+            value: "${ARTIFACT_DIR}"
+          forcePull: true
+          incremental: true
+          from:
+            kind: ImageStreamTag
+            namespace: "${IMAGE_STREAM_NAMESPACE}"
+            name: "${IMAGE_NAME}"
+      output:
+        to:
+          kind: ImageStreamTag
+          name: "${SERVER_APPLICATION}:latest"
       triggers:
       - type: GitHub
         github:
