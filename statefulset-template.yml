@@ -25,7 +25,7 @@ parameters:
   - name: SOURCE_REPOSITORY_URL
     displayName: Git Repository URL
     description: Git source URI for application
-    value: https://github.com/ochaloup/txn-propagation-openshift.git
+    value: https://github.com/ochaloup/openshift-tx.git
     required: true
   - name: SOURCE_REPOSITORY_REF
     displayName: Git Reference
@@ -64,7 +64,7 @@ parameters:
   - name: IMAGE_STREAM_NAMESPACE
     displayName: ImageStream Namespace
     description: Default is without any namaspace. Middleware goes usually to openshift namespace.
-    value: ''
+    value: 'openshift'
     required: false
   - name: GITHUB_WEBHOOK_SECRET
     displayName: Github Webhook Secret
@@ -118,6 +118,7 @@ objects:
   - kind: StatefulSet
     apiVersion: apps/v1
     metadata:
+      name: "${CLIENT_APPLICATION}"
       application: "${CLIENT_APPLICATION}"
     spec:
       serviceName: "${CLIENT_APPLICATION}"
