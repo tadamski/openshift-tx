@@ -45,7 +45,7 @@ parameters:
   - name: SOURCE_REPOSITORY_REF
     displayName: Git Reference
     description: Git branch/tag reference
-    value: 'eap71'
+    value: 'eap71-statefulset-call-error'
     required: false
   - name: CUSTOM_INSTALL_DIRECTORIES
     displayName: Custom install directories (see documentation).
