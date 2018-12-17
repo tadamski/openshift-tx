@@ -75,10 +75,6 @@ parameters:
     description: Default is without any namespace. Middleware goes usually to openshift namespace. It is where EAP image is searched at.
     value: 'openshift'
     required: false
-  - name: IMAGE_NAME
-    description: Image of EAP which will be search in the IMAGE_STREAM_NAMESPACE and application will run at
-    value: 'eap-cd-openshift:14'
-    required: false
   - name: GITHUB_WEBHOOK_SECRET
     displayName: Github Webhook Secret
     description: GitHub trigger secret
@@ -252,7 +248,7 @@ objects:
           from:
             kind: ImageStreamTag
             namespace: "${IMAGE_STREAM_NAMESPACE}"
-            name: "${IMAGE_NAME}"
+            name: "eap-image-stream"
       output:
         to:
           kind: ImageStreamTag
@@ -374,7 +370,7 @@ objects:
           from:
             kind: ImageStreamTag
             namespace: "${IMAGE_STREAM_NAMESPACE}"
-            name: "${IMAGE_NAME}"
+            name: "eap-image-stream"
       output:
         to:
           kind: ImageStreamTag
@@ -390,10 +386,19 @@ objects:
         imageChange: {}
       - type: ConfigChange
 
+  # https://docs.openshift.com/container-platform/latest/dev_guide/managing_images.html#insecure-registries
+  - kind: ImageStream
+    apiVersion: v1
+    metadata:
+      name: eap-image-stream
+      annotations:
+        openshift.io/image.insecureRepository: "true"
+      spec:
+        dockerImageRepository: registry.access.redhat.com/jboss-eap-7/eap71-openshift
 
   # allow the default service account to list pods
-  - apiVersion: v1
-    kind: Role
+  - kind: Role
+    apiVersion: v1
     metadata:
       name: pods-listing
     rules:
