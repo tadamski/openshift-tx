@@ -248,7 +248,7 @@ objects:
           from:
             kind: ImageStreamTag
             namespace: "${IMAGE_STREAM_NAMESPACE}"
-            name: "eap-image-stream"
+            name: "eap-image-stream:latest"
       output:
         to:
           kind: ImageStreamTag
@@ -292,7 +292,7 @@ objects:
                 - name: OPENSHIFT_KUBE_PING_LABELS
                   value: "application=${SERVER_APPLICATION}"
                 - name: JAVA_OPTS_APPEND
-                  value: "-Dtx.server.host=${SERVER_APPLICATION} -Djboss.default.multicast.address=230.0.0.6" 
+                  value: "-Djboss.default.multicast.address=230.0.0.6"
                 - name: SCRIPT_DEBUG
                   value: "${SCRIPT_DEBUG}"
               image: "${SERVER_APPLICATION}"
@@ -370,7 +370,7 @@ objects:
           from:
             kind: ImageStreamTag
             namespace: "${IMAGE_STREAM_NAMESPACE}"
-            name: "eap-image-stream"
+            name: "eap-image-stream:latest"
       output:
         to:
           kind: ImageStreamTag
@@ -392,9 +392,13 @@ objects:
     metadata:
       name: eap-image-stream
       annotations:
-        openshift.io/image.insecureRepository: "true"
-      spec:
-        dockerImageRepository: registry.access.redhat.com/jboss-eap-7/eap71-openshift
+        openshift.io/display-name: JBossEAP
+    spec:
+      tags:
+        - name: 'latest'
+          from:
+            kind: DockerImage
+            name: 'registry.access.redhat.com/jboss-eap-7/eap71-openshift:latest'
 
   # allow the default service account to list pods
   - kind: Role
