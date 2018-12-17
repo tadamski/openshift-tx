@@ -37,6 +37,10 @@ parameters:
     displayName: "Container memory limit"
     value: "1Gi"
     required: false
+  - name: VOLUME_CAPACITY
+    displayName: "Capacity of the volume of the statefulset"
+    value: "1Gi"
+    required: false
   - name: SOURCE_REPOSITORY_URL
     displayName: Git Repository URL
     description: Git source URI for application
@@ -186,6 +190,10 @@ objects:
                 - containerPort: 8888
                   name: "ping"
                   protocol: "TCP"
+              volumeMounts:
+                # txn object store and ejb remoting data (WFTC-38) is stored in jboss.server.data.dir
+                - name: clientdata
+                  mountPath: "/opt/eap/standalone/data"
               livenessProbe:
                 initialDelaySeconds: 60
                 exec:
@@ -200,6 +208,14 @@ objects:
                     - "/bin/bash"
                     - "-c"
                     - "/opt/eap/bin/readinessProbe.sh"
+      volumeClaimTemplates:
+        - metadata:
+            name: clientdata
+          spec:
+            accessModes: [ "ReadWriteOnce" ]
+            resources:
+              requests:
+                storage: "${VOLUME_CAPACITY}"
 
   - kind: ImageStream
     apiVersion: v1
@@ -297,6 +313,9 @@ objects:
                 - containerPort: 8888
                   name: "ping"
                   protocol: "TCP"
+              volumeMounts:
+                - name: serverdata
+                  mountPath: "/opt/eap/standalone/data"
               livenessProbe:
                 initialDelaySeconds: 60
                 exec:
@@ -311,6 +330,14 @@ objects:
                     - "/bin/bash"
                     - "-c"
                     - "/opt/eap/bin/readinessProbe.sh"
+      volumeClaimTemplates:
+        - metadata:
+            name: serverdata
+          spec:
+            accessModes: [ "ReadWriteOnce" ]
+            resources:
+              requests:
+                storage: "${VOLUME_CAPACITY}"
 
   - kind: ImageStream
     apiVersion: v1
@@ -377,7 +404,7 @@ objects:
   - apiVersion: v1
     kind: RoleBinding
     metadata:
-      name: default
+      name: claim-pod-listing-to-default
       annotations:
         description: "Role binding for the default service account"
     subjects:
