@@ -587,7 +587,7 @@
             <remote-destination host="localhost" port="25"/>
         </outbound-socket-binding>
         <outbound-socket-binding name="remote-ejb">
-            <remote-destination host="${tx.server.host}" port="8080"/>
+            <remote-destination host="tx-server.eap-transactions.svc" port="8080"/>
         </outbound-socket-binding>
     </socket-binding-group>
 </server>
