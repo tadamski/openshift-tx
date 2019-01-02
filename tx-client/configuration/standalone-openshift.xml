@@ -61,7 +61,7 @@
             </security-realm>
             <security-realm name="ejb-security-realm">
                 <server-identities>
-                    <secret value="dGVzdA=="/>
+                    <secret value="ZWpi"/>
                 </server-identities>
             </security-realm>
         </security-realms>
