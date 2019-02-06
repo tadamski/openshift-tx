@@ -224,7 +224,15 @@
             <default-missing-method-permissions-deny-access value="true"/>
             <log-system-exceptions value="true"/>
         </subsystem>
-        <subsystem xmlns="urn:wildfly:elytron:1.2" final-providers="combined-providers" disallowed-providers="OracleUcrypto">
+        <subsystem xmlns="urn:wildfly:elytron:1.2" default-authentication-context="default" final-providers="combined-providers" disallowed-providers="OracleUcrypto">
+            <authentication-client>
+                <authentication-configuration name="ejb-auth" authentication-name="ejb">
+                    <credential-reference clear-text="ejb"/>
+                </authentication-configuration>
+                <authentication-context name="default">
+                    <match-rule authentication-configuration="ejb-auth"/>
+                </authentication-context>
+            </authentication-client>
             <providers>
                 <aggregate-providers name="combined-providers">
                     <providers name="elytron"/>
