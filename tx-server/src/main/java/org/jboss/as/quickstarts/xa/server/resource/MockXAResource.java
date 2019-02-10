@@ -20,6 +20,7 @@ public class MockXAResource implements XAResource {
 
     public MockXAResource() {
         this.testAction = TestAction.PREPARE_THROW_XAER_RMERR;
+        System.out.println("TWORZE TEST RESOURCE Z TEST ACTION "+testAction);
     }
 
     public MockXAResource(TestAction testAction) {
@@ -28,10 +29,12 @@ public class MockXAResource implements XAResource {
 
     @Override
     public int prepare(Xid xid) throws XAException {
+        System.out.println("IDZIE PREPARE");
         log.tracef("prepare xid: [%s]", xid);
 
         switch (testAction) {
             case PREPARE_THROW_XAER_RMERR:
+                System.out.println("WYJATEK");
                 throw new XAException(XAException.XAER_RMERR);
             case PREPARE_THROW_XAER_RMFAIL:
                 throw new XAException(XAException.XAER_RMFAIL);
@@ -45,6 +48,7 @@ public class MockXAResource implements XAResource {
 
     @Override
     public void commit(Xid xid, boolean onePhase) throws XAException {
+        System.out.println("IDZIE COMMIT");
         log.tracef("commit xid:[%s], %s one phase", xid, onePhase ? "with" : "without");
 
         switch (testAction) {
