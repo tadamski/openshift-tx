@@ -19,7 +19,7 @@ public class MockXAResource implements XAResource {
     private int transactionTimeout;
 
     public MockXAResource() {
-        this.testAction = TestAction.PREPARE_THROW_XAER_RMERR;
+        this.testAction = TestAction.COMMIT_THROW_XAER_RMFAIL;
         System.out.println("TWORZE TEST RESOURCE Z TEST ACTION "+testAction);
     }
 
