@@ -59,7 +59,7 @@ public class TransactionalLocalBean implements TransactionalLocal {
                         return "ERROR: Active transaction expected but was " + stringForm(status);
                     }
                 } finally {
-                    userTransaction.rollback();
+                    userTransaction.commit();
                 }
             } catch (Exception e) {
                 log.error("Cannot call remote stateless ejb or rollback transaction", e);
