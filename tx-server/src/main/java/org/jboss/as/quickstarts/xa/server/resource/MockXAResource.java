@@ -68,11 +68,13 @@ public class MockXAResource implements XAResource {
 
     @Override
     public void end(Xid xid, int flags) throws XAException {
+        System.out.println("IDZIE END");
         log.tracef("end xid:[%s], flag: %s", xid, flags);
     }
 
     @Override
     public void forget(Xid xid) throws XAException {
+        System.out.println("IDZIE FORGET");
         log.tracef("forget xid:[%s]", xid);
     }
 
@@ -90,12 +92,14 @@ public class MockXAResource implements XAResource {
 
     @Override
     public Xid[] recover(int flag) throws XAException {
+        System.out.println("IDZIE RECOVER");
         log.tracef("recover with flags: %s", flag);
         return new Xid[]{};
     }
 
     @Override
     public void rollback(Xid xid) throws XAException {
+        System.out.println("IDZIE ROLLBACK");
         log.tracef("rollback xid: [%s]", xid);
     }
 
