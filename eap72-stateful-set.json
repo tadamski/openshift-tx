@@ -388,7 +388,7 @@
                                     },
                                     {
                                         "name": "JAVA_OPTS_APPEND",
-                                        "value": "${JBOSS_HOME}/standalone/configuration/custom-config.xml"
+                                        "value": "-Dwildfly.config.url=${JBOSS_HOME}/standalone/configuration/custom-config.xml"
                                     }
                                 ],
                                 "volumeMounts": [
