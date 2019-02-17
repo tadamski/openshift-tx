@@ -53,7 +53,7 @@ public class MockXAResource implements XAResource, Serializable {
         System.out.println("IDZIE COMMIT");
         log.tracef("commit xid:[%s], %s one phase", xid, onePhase ? "with" : "without");
 
-        Runtime.getRuntime().halt(1);
+        //Runtime.getRuntime().halt(1);
 
         switch (testAction) {
             case COMMIT_THROW_XAER_RMERR:
