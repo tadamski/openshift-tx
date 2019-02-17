@@ -381,6 +381,10 @@
                                     {
                                         "name": "AUTO_DEPLOY_EXPLODED",
                                         "value": "${AUTO_DEPLOY_EXPLODED}"
+                                    },
+                                    {
+                                        "name": "DEBUG",
+                                        "value": "true"
                                     }
                                 ],
                                 "volumeMounts": [
