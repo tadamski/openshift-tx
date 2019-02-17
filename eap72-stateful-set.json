@@ -385,6 +385,10 @@
                                     {
                                         "name": "DEBUG",
                                         "value": "true"
+                                    },
+                                    {
+                                        "name": "JAVA_OPTS_APPEND",
+                                        "value": "${JBOSS_HOME}/standalone/configuration/custom-config.xml"
                                     }
                                 ],
                                 "volumeMounts": [
