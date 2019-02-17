@@ -382,11 +382,34 @@
                                         "name": "AUTO_DEPLOY_EXPLODED",
                                         "value": "${AUTO_DEPLOY_EXPLODED}"
                                     }
+                                ],
+                                "volumeMounts": [
+                                    {
+                                        "name": "eapdata",
+                                        "mountPath": "/opt/eap/standalone/data"
+                                    }
                                 ]
                             }
                         ]
                     }
-                }
+                },
+                "volumeClaimTemplates": [
+                    {
+                        "metadata": {
+                            "name": "eapdata"
+                        },
+                        "spec": {
+                            "accessModes": [
+                                "ReadWriteOnce"
+                            ],
+                            "resources": {
+                                "requests": {
+                                    "storage": "100M"
+                                }
+                            }
+                        }
+                    }
+                ]
             }
         }
     ]
