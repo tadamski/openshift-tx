@@ -6,7 +6,9 @@ import javax.transaction.xa.Xid;
 
 import org.jboss.logging.Logger;
 
-public class MockXAResource implements XAResource {
+import java.io.Serializable;
+
+public class MockXAResource implements XAResource, Serializable {
     private static Logger log = Logger.getLogger(MockXAResource.class);
 
     public enum TestAction {
