@@ -21,7 +21,7 @@ public class MockXAResource implements XAResource, Serializable {
     private int transactionTimeout;
 
     public MockXAResource() {
-        this.testAction = TestAction.COMMIT_THROW_XAER_RMFAIL;
+        this.testAction = TestAction.NONE;//COMMIT_THROW_XAER_RMFAIL;
         System.out.println("TWORZE TEST RESOURCE Z TEST ACTION "+testAction);
     }
 
