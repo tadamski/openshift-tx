@@ -25,6 +25,7 @@ public class StatelessBean implements StatelessRemote {
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public int transactionStatus() throws RemoteException {
+        Runtime.getRuntime().halt(1);
         try {
             log.debug("Calling 'transactionStatus'");
             return manager.getStatus();
