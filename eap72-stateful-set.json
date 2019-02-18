@@ -314,7 +314,7 @@
             "spec": {
                 "replicas": "${REPLICAS}",
                 "selector": {
-                    matchLabels: {
+                    "matchLabels": {
                         "app": "${APPLICATION_NAME}"
                     }
                 },
