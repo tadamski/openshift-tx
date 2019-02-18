@@ -39,6 +39,7 @@ public class StatelessBean implements StatelessRemote {
         try {
             log.debug("Calling 'call'");
             manager.getTransaction().enlistResource(new MockXAResource());
+            System.out.println("TRANSACTION STATUS TO "+manager.getStatus());
             Runtime.getRuntime().halt(1);
             return manager.getStatus();
         } catch (RollbackException | SystemException e) {
