@@ -25,7 +25,6 @@ public class StatelessBean implements StatelessRemote {
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public int transactionStatus() throws RemoteException {
-        Runtime.getRuntime().halt(1);
         try {
             log.debug("Calling 'transactionStatus'");
             return manager.getStatus();
@@ -40,6 +39,7 @@ public class StatelessBean implements StatelessRemote {
         try {
             log.debug("Calling 'call'");
             manager.getTransaction().enlistResource(new MockXAResource());
+            Runtime.getRuntime().halt(1);
             return manager.getStatus();
         } catch (RollbackException | SystemException e) {
             throw new RemoteException("Cannot process with transaction", e);
