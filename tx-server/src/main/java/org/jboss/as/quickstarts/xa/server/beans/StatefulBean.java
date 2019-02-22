@@ -1,4 +1,4 @@
-package org.jboss.as.quickstarts.xa.server;
+package org.jboss.as.quickstarts.xa.server.beans;
 
 import java.rmi.RemoteException;
 
@@ -12,6 +12,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.transaction.TransactionSynchronizationRegistry;
 
+import org.jboss.as.quickstarts.xa.server.StatefulRemote;
 import org.jboss.logging.Logger;
 
 @Remote(StatefulRemote.class)

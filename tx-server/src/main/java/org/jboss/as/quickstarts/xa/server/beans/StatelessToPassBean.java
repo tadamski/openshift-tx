@@ -1,4 +1,4 @@
-package org.jboss.as.quickstarts.xa.server;
+package org.jboss.as.quickstarts.xa.server.beans;
 
 import java.rmi.RemoteException;
 
@@ -11,13 +11,15 @@ import javax.transaction.RollbackException;
 import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
 
-import org.jboss.as.quickstarts.xa.server.resource.MockXAResource;
+import org.jboss.as.quickstarts.xa.server.StatelessRemote;
+import org.jboss.as.quickstarts.xa.server.resources.MockXAResource;
+import org.jboss.as.quickstarts.xa.server.resources.Utils;
 import org.jboss.logging.Logger;
 
 @Stateless
 @Remote (StatelessRemote.class)
-public class StatelessBean implements StatelessRemote {
-    private static final Logger log = Logger.getLogger(StatelessBean.class);
+public class StatelessToPassBean implements StatelessRemote {
+    private static final Logger log = Logger.getLogger(StatelessToPassBean.class);
 
     @Resource(lookup = "java:/TransactionManager")
     private TransactionManager manager;
@@ -26,8 +28,9 @@ public class StatelessBean implements StatelessRemote {
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public int transactionStatus() throws RemoteException {
         try {
-            log.debug("Calling 'transactionStatus'");
-            return manager.getStatus();
+            int status = manager.getStatus();
+            log.infof("Calling 'transactionStatus', status is %s", Utils.status(status));
+            return status;
         } catch (SystemException e) {
             throw new RemoteException("Can't get transaction status", e);
         }
@@ -37,11 +40,10 @@ public class StatelessBean implements StatelessRemote {
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public int call() throws RemoteException {
         try {
-            log.debug("Calling 'call'");
+            int status = manager.getStatus();
+            log.infof("Calling 'call' with txn status %s", Utils.status(status));
             manager.getTransaction().enlistResource(new MockXAResource());
-            System.out.println("TRANSACTION STATUS TO "+manager.getStatus());
-            Runtime.getRuntime().halt(1);
-            return manager.getStatus();
+            return status;
         } catch (RollbackException | SystemException e) {
             throw new RemoteException("Cannot process with transaction", e);
         }
