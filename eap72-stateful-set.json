@@ -8,8 +8,8 @@
             "version": "1.4.17",
             "openshift.io/display-name": "EAP 7.2 CLUSTER ON STATEFUL SET",
             "openshift.io/provider-display-name": "Red Hat, Inc.",
-            "description": "An example EAP 7 application. For more information about using this template, see https://github.com/jboss-openshift/application-templates.",
-            "template.openshift.io/long-description": "This template defines resources needed to develop Red Hat Enterprise Application Server 7.2 based application, including a build configuration, application deployment configuration and insecure communication using http.",
+            "description": "An example Red Hat JBoss EAP 7 application. For more information about using this template, see https://github.com/jboss-container-images/jboss-eap-7-openshift-image/blob/eap72/README.adoc",
+            "template.openshift.io/long-description": "This template defines resources needed to develop a Red Hat JBoss Enterprise Application Platform 7.2 based application, including a build configuration, application deployment configuration.",
             "template.openshift.io/documentation-url": "https://access.redhat.com/documentation/en/red-hat-jboss-enterprise-application-platform/",
             "template.openshift.io/support-url": "https://access.redhat.com"
         },
@@ -54,32 +54,25 @@
             "description": "Path within Git project to build; empty for root project directory.",
             "name": "CONTEXT_DIR",
             "value": "",
-            "required": false
-        },
-        {
-            "displayName": "Replicas",
-            "description": "Number of replicas.",
-            "name": "REPLICAS",
-            "value": "1",
             "required": true
         },
         {
             "displayName": "Queues",
-            "description": "Queue names",
+            "description": "Queue names, separated by commas. These queues will be automatically created when the broker starts. Also, they will be made accessible as JNDI resources in EAP. Note that all queues used by the application *must* be specified here in order to be created automatically on the remote AMQ broker.",
             "name": "MQ_QUEUES",
             "value": "",
             "required": false
         },
         {
             "displayName": "Topics",
-            "description": "Topic names",
+            "description": "Topic names, separated by commas. These topics will be automatically created when the broker starts. Also, they will be made accessible as JNDI resources in EAP. Note that all topics used by the application *must* be specified here in order to be created automatically on the remote AMQ broker.",
             "name": "MQ_TOPICS",
             "value": "",
             "required": false
         },
         {
-            "displayName": "A-MQ cluster password",
-            "description": "A-MQ cluster admin password",
+            "displayName": "AMQ cluster password",
+            "description": "AMQ cluster admin password",
             "name": "MQ_CLUSTER_PASSWORD",
             "from": "[a-zA-Z0-9]{8}",
             "generate": "expression",
@@ -112,7 +105,8 @@
             "displayName": "JGroups Cluster Password",
             "description": "JGroups cluster password",
             "name": "JGROUPS_CLUSTER_PASSWORD",
-            "value": "ala123",
+            "from": "[a-zA-Z0-9]{8}",
+            "generate": "expression",
             "required": true
         },
         {
@@ -147,6 +141,34 @@
             "name": "MEMORY_LIMIT",
             "value": "1Gi",
             "required": false
+        },
+        {
+            "displayName": "Replicas",
+            "description": "Number of replicas.",
+            "name": "REPLICAS",
+            "value": "1",
+            "required": true
+        },
+        {
+            "displayName": "Debug JBoss EAP",
+            "description": "Starting JBoss EAP instance with debug port 8787 opened",
+            "name": "DEBUG",
+            "value": "true",
+            "required": false
+        },
+        {
+            "displayName": "tx-server host",
+            "description": "Name of the tx-server application for the tx-client knowing where to connect to with the remote call. This parameter is necessary only for the tx-client.",
+            "name": "TX_SERVER_HOST",
+            "value": "tx-server",
+            "required": true
+        },
+        {
+            "displayName": "Debug scripts printing",
+            "description": "Running OpenShift EAP scripts with set -x. Set to 'true' to get verbose output from the scripts.",
+            "name": "SCRIPT_DEBUG",
+            "value": "false",
+            "required": false
         }
     ],
     "objects": [
@@ -179,6 +201,7 @@
             "kind": "Service",
             "apiVersion": "v1",
             "spec": {
+                "publishNotReadyAddresses": true,
                 "clusterIP": "None",
                 "ports": [
                     {
@@ -267,6 +290,7 @@
                             }
                         ],
                         "forcePull": true,
+                        "incremental": true,
                         "from": {
                             "kind": "ImageStreamTag",
                             "namespace": "${IMAGE_STREAM_NAMESPACE}",
@@ -339,7 +363,31 @@
                                         "memory": "${MEMORY_LIMIT}"
                                     }
                                 },
+                                "livenessProbe": {
+                                    "exec": {
+                                        "command": [
+                                            "/bin/bash",
+                                            "-c",
+                                            "/opt/eap/bin/livenessProbe.sh"
+                                        ]
+                                    },
+                                    "initialDelaySeconds": 60
+                                },
+                                "readinessProbe": {
+                                    "exec": {
+                                        "command": [
+                                            "/bin/bash",
+                                            "-c",
+                                            "/opt/eap/bin/readinessProbe.sh"
+                                        ]
+                                    }
+                                },
                                 "ports": [
+                                    {
+                                        "name": "jolokia",
+                                        "containerPort": 8778,
+                                        "protocol": "TCP"
+                                    },
                                     {
                                         "name": "http",
                                         "containerPort": 8080,
@@ -354,7 +402,7 @@
                                 "env": [
                                     {
                                         "name": "JGROUPS_PING_PROTOCOL",
-                                        "value": "openshift.DNS_PING"
+                                        "value": "dns.DNS_PING"
                                     },
                                     {
                                         "name": "OPENSHIFT_DNS_PING_SERVICE_NAME",
@@ -386,11 +434,15 @@
                                     },
                                     {
                                         "name": "DEBUG",
-                                        "value": "true"
+                                        "value": "${DEBUG}"
                                     },
                                     {
                                         "name": "JAVA_OPTS_APPEND",
-                                        "value": "-Dwildfly.config.url=${JBOSS_HOME}/standalone/configuration/custom-config.xml"
+                                        "value": "-Dwildfly.config.url=${JBOSS_HOME}/standalone/configuration/custom-config.xml -Dtx.server.host=${TX_SERVER_HOST}"
+                                    },
+                                    {
+                                        "name": "SCRIPT_DEBUG",
+                                        "value": "${SCRIPT_DEBUG}"
                                     }
                                 ],
                                 "volumeMounts": [
