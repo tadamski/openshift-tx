@@ -75,7 +75,7 @@
             </logger>
         </audit-log>
         <management-interfaces>
-            <http-interface security-realm="ManagementRealm">
+            <http-interface console-enabled="false"><!-- ##MGMT_IFACE_REALM## -->
                 <http-upgrade enabled="true"/>
                 <socket-binding http="management-http"/>
             </http-interface>
