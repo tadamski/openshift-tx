@@ -29,7 +29,7 @@ public class BeanTestServerCallerTwoPhase {
         return "SUCCESS";
     }
 
-    public String callNone(String beanName) {
+    public String callTestActionNone(String beanName) {
         return this.call(beanName, MockXAResource.TestAction.NONE);
     }
 }

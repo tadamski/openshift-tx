@@ -35,13 +35,13 @@ public class EJBTestCallerRestEndpoints {
     @Path("stateless-jvm-halt-on-commit-server")
     @Produces("text/plain")
     public String testToHaltJVMOnCommitServer() {
-        return serverCallerTwoPhase.callNone("StatelessBeanKillOnCommit");
+        return serverCallerTwoPhase.callTestActionNone("StatelessBeanKillOnCommit");
     }
 
     @GET
     @Path("stateless-jvm-halt-on-prepare-server")
     @Produces("text/plain")
     public String BeanTestToKillJVMOnPrepareServer() {
-        return serverCallerTwoPhase.callNone("StatelessBeanKillOnPrepare");
+        return serverCallerTwoPhase.callTestActionNone("StatelessBeanKillOnPrepare");
     }
 }
