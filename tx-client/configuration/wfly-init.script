@@ -1,0 +1,9 @@
+# /subsystem=logging/logger=com.arjuna:write-attribute(name=level,value=TRACE)
+# /subsystem=logging/logger=com.arjuna:write-attribute(name=level,value=TRACE)
+# /subsystem=logging/logger=org.jboss.as.quickstarts:add(level=TRACE)
+# /subsystem=logging/logger=org.jboss.ejb.client:add(level=TRACE)
+# /subsystem=logging/logger=org.jboss.as.remoting:add(level=TRACE)
+# /subsystem=logging/logger=org.jboss.remoting3:add(level=TRACE)
+# /subsystem=logging/logger=org.jboss.ejb.protocol.remote:add(level=TRACE)
+# /subsystem=logging/logger=org.jgroups.protocols.kubernetes:add(level=TRACE)
+
