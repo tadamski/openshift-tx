@@ -54,6 +54,10 @@ oc scale sts tx-client --replicas=0
 oc delete all --all; oc delete $(oc get pvc -o name); oc delete template eap72-stateful-set
 ```
 
+* For changing configuration you can create file `configuration/wfly-init.script`
+which defines WildFly CLI commands. They will be executed just before the WildFly pod is started.
+This functionality is configured in the template `json` as `PostStart` hook.
+
 # How to debug
 
 Resources about OpenShift Java debudding at
@@ -94,8 +98,8 @@ all the building. These lines could help with that
 ```
 oc create -f eap72-image-stream.json
 oc create -f eap72-stateful-set.json
-REF=tadamski-master-unchanged
-REPO=tadamski
+REF=tadamski-master-unchanged-my-changes
+REPO=ochaloup
 oc new-app --template=eap72-stateful-set -p APPLICATION_NAME=tx-client -p CONTEXT_DIR=tx-client -p SOURCE_REPOSITORY_URL=https://github.com/${REPO}/openshift-tx.git -p SOURCE_REPOSITORY_REF=$REF
 oc new-app --template=eap72-stateful-set -p APPLICATION_NAME=tx-server -p CONTEXT_DIR=tx-server -p SOURCE_REPOSITORY_URL=https://github.com/${REPO}/openshift-tx.git -p SOURCE_REPOSITORY_REF=$REF
 sleep 10; oc logs -f bc/tx-client

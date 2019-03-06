@@ -361,6 +361,17 @@
                                         "memory": "${MEMORY_LIMIT}"
                                     }
                                 },
+                                "lifecycle": {
+                                    "postStart": {
+                                        "exec": {
+                                            "command": [
+                                                "/bin/bash",
+                                                "-c",
+                                                "set -x; if [ -f /opt/eap/standalone/configuration/wfly-init.script ]; then COUNT=0; until /opt/eap/bin/jboss-cli.sh -c --command=':read-attribute(name=server-state)' | grep -q -E 'result.*running' || [ $COUNT -gt 20 ]; do echo waiting for wfly to be started...; COUNT=$((COUNT+1)); done; /opt/eap/bin/jboss-cli.sh -c --file=/opt/eap/standalone/configuration/wfly-init.script; fi 2>&1 > /tmp/PostStart-kubernetes-hook.log"
+                                            ]
+                                        }
+                                    }
+                                },
                                 "livenessProbe": {
                                     "exec": {
                                         "command": [
