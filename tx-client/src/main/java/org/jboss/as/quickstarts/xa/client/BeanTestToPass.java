@@ -31,7 +31,7 @@ public class BeanTestToPass {
 
             log.infof("Calling remote bean '%s' to find out the status of transaction", bean);
             int status = bean.transactionStatus();
-            log.debugf("Transaction status from 'transactionStatus' is %s", status);
+            log.infof("Transaction status from 'transactionStatus' is %s", status);
             if(Status.STATUS_NO_TRANSACTION != status) {
                 return "ERROR: No transaction expected but transaction status was " + Utils.status(status);
             }
@@ -47,7 +47,7 @@ public class BeanTestToPass {
         try {
             userTransaction.begin();
             int status = bean.call();
-            log.debugf("Transaction status from 'call' is %s", status);
+            log.infof("Transaction status from 'call' is %s", status);
             if(status != Status.STATUS_ACTIVE) {
                 return "ERROR: Active transaction expected but was " + Utils.status(status);
             }
