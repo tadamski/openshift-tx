@@ -154,6 +154,7 @@
             "kind": "Service",
             "apiVersion": "v1",
             "spec": {
+                "clusterIP": "None",
                 "ports": [
                     {
                         "port": 8080,
@@ -312,6 +313,7 @@
                 }
             },
             "spec": {
+                "serviceName": "${APPLICATION_NAME}",
                 "replicas": "${REPLICAS}",
                 "selector": {
                     "matchLabels": {
