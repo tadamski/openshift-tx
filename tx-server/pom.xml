@@ -70,7 +70,7 @@
         <version.server.bom>7.1.0.GA</version.server.bom>
         <version.jboss.spec.javaee.7.0>1.1.0.Final-redhat-3</version.jboss.spec.javaee.7.0>
         <version.jaxws-tools-maven-plugin>1.2.0.Final</version.jaxws-tools-maven-plugin>
-
+        <version.narayana>5.9.0.Final</version.narayana>
 
     </properties>
 
@@ -135,6 +135,14 @@
         <dependency>
             <groupId>org.jboss.resteasy</groupId>
             <artifactId>resteasy-jackson-provider</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- for Mock XAResource testing we need the dependency to Narayana -->
+        <dependency>
+            <groupId>org.jboss.narayana.jta</groupId>
+            <artifactId>jta</artifactId>
+            <version>${version.narayana}</version>
             <scope>provided</scope>
         </dependency>
 

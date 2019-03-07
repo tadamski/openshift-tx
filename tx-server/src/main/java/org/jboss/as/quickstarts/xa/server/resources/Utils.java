@@ -1,6 +1,12 @@
 package org.jboss.as.quickstarts.xa.server.resources;
 
-public class Utils {
+import org.jboss.logging.Logger;
+
+public final class Utils {
+    private Utils() throws IllegalAccessException {
+        throw new IllegalAccessException("utility class, do not instantiate");
+    }
+
     public static String status(int status) {
         switch (status) {
             case javax.transaction.Status.STATUS_ACTIVE:
