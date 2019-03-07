@@ -1,7 +1,81 @@
-eap64
-narayana source code is 4.17.39.Final (I think)
+# Setup for EJB TXN remoting with StatefulSet with EAP 7.2
 
-# Starting minishift
+# How to run
+
+```
+# new project
+oc new-project eap-transactions --display-name="JBoss EAP Transactional EJB"
+# creating image streams
+oc create -f ./eap72-image-stream.json
+# statefulset template creation
+oc create -f ./eap72-stateful-set.json
+# startup tx-server service
+oc new-app --template=eap72-stateful-set -p APPLICATION_NAME=tx-server -p CONTEXT_DIR=tx-server
+# startup tx-client service
+oc new-app --template=eap72-stateful-set -p APPLICATION_NAME=tx-client -p CONTEXT_DIR=tx-client
+```
+
+## How to invoke particular "test cases"
+
+Check the endpoints at java class [EJBTestCallerRestEndpoints.java](tx-client/src/main/java/org/jboss/as/quickstarts/xa/client/EJBTestCallerRestEndpoints.java)
+
+```
+# stateless bean without failures using `UserTransaction` to begin transaction
+# running two invocations - one is non-txn the other is with transaction started
+curl -XGET "http://tx-client-`oc project -q`.`minishift ip`.nip.io/tx-client/api/ejb/stateless-pass"
+
+# stateless bean which crashes tx-server at the end of the business method (see StatelessBeanKillJVMBusiness.java)
+curl -XGET "http://tx-client-`oc project -q`.`minishift ip`.nip.io/tx-client/api/ejb/statless-jvm-halt-business"
+
+# stateless bean which crashes tx-server at XAResource.commit (see StatelessBeanKillOnCommit.java)
+curl -XGET "http://tx-client-`oc project -q`.`minishift ip`.nip.io/tx-client/api/ejb/stateless-jvm-halt-on-commit-server"
+
+# stateless bean which crashes tx-server at XAResource.prepare (see StatelessBeanKillOnPrepare.java)
+curl -XGET "http://tx-client-`oc project -q`.`minishift ip`.nip.io/tx-client/api/ejb/stateless-jvm-halt-on-prepare-server"
+```
+
+## Notes on "How to run"
+
+* if you want to run from different git repo and branch
+```
+oc new-app --template=eap72-stateful-set -p APPLICATION_NAME=tx-client -p CONTEXT_DIR=tx-client -p SOURCE_REPOSITORY_URL=https://github.com/ochaloup/openshift-tx.git -p SOURCE_REPOSITORY_REF=master
+```
+
+* for scaling
+```
+# to scale down or up the statefulset
+oc scale sts tx-server --replicas=0
+oc scale sts tx-client --replicas=0
+```
+
+* to delete the namespace created
+
+```
+oc delete all --all; oc delete $(oc get pvc -o name); oc delete template eap72-stateful-set
+```
+
+* For changing configuration you can create file `configuration/wfly-init.script`
+which defines WildFly CLI commands. They will be executed just before the WildFly pod is started.
+This functionality is configured in the template `json` as `PostStart` hook.
+
+# How to debug
+
+Resources about OpenShift Java debudding at
+https://blog.openshift.com/debugging-java-applications-on-openshift-kubernetes/
+
+```
+# check if there is route to tx-server and in case create new one
+oc get route
+oc expose service tx-server
+# set the DEBUG env variable which causes the EAP is started with debug port opened
+# for changing the opened debug port (in container!) you can use DEBUG_PORT
+oc set env dc/tx-server DEBUG=true # Enable the debug port
+# forward the opended debug port to the hosting machine
+oc port-forward tx-server-0 8787:8787 &
+```
+
+
+## Appendix 1: Starting minishift
 
 ```
  minishift delete
@@ -16,171 +90,87 @@ narayana source code is 4.17.39.Final (I think)
  #docker pull brew-pulp-docker01.web.prod.ext.phx2.redhat.com:8888/jboss-eap-7/eap71
 ```
 
-# create new project
+## Appendix 2: Useful command and snippets
+
+* when the project/namespace is cleaned with `oc delete` commands it could be helpful to just start
+all the building. These lines could help with that
 
 ```
- oc new-project eap-transactions --display-name="JBoss EAP Transactional EJB"
+oc create -f eap72-image-stream.json
+oc create -f eap72-stateful-set.json
+REF=tadamski-master-unchanged-my-changes
+REPO=ochaloup
+oc new-app --template=eap72-stateful-set -p APPLICATION_NAME=tx-client -p CONTEXT_DIR=tx-client -p SOURCE_REPOSITORY_URL=https://github.com/${REPO}/openshift-tx.git -p SOURCE_REPOSITORY_REF=$REF
+oc new-app --template=eap72-stateful-set -p APPLICATION_NAME=tx-server -p CONTEXT_DIR=tx-server -p SOURCE_REPOSITORY_URL=https://github.com/${REPO}/openshift-tx.git -p SOURCE_REPOSITORY_REF=$REF
+sleep 10; oc logs -f bc/tx-client
 ```
 
-## Importing EAP images
+* To build the code at the local machine and load the build to OpenShift, see
+  https://docs.openshift.com/container-platform/3.6/dev_guide/dev_tutorials/binary_builds.html#binary-builds-local-code-changes.
+  When build is done (`oc get bc`) the StatefulSet does not redeploy automatically (TODO: not sure if it could be configured somewhere)
 
 ```
- # oc import-image jboss-eap-70 --from=registry.access.redhat.com/jboss-eap-7/eap70-openshift --confirm
- # oc import-image jboss-eap-64 --from=registry.access.redhat.com/jboss-eap-6/eap64-openshift --confirm
- oc import-image jboss-eap-71 --from=registry.access.redhat.com/jboss-eap-7/eap71-openshift --confirm
+cd openshift-tx
+# to build tx-client `bc/tx-client`
+oc start-build tx-client --from-dir="." --follow
+# to build tx-server `bc/tx-server`
+oc start-build tx-server --from-dir="." --follow
 ```
 
-# create and deploy server
+* To run the new build (if there is some, see above) you need to scale down and up
+  the StatefulSet. This oneliner could help with that
 
 ```
-cat server.sh
-```
-see at [server.sh](./server.sh)
-
-# create and deploy client
-
-```
-cat client.sh
-```
-see at [client.sh](./client.sh)
-
-# trigger an ejb call
-
-```
-curl -XGET 'http://tx-client-eap-transactions.192.168.99.100.nip.io/tx-client/api/ejb/stateful/arg'
-curl -XGET 'http://tx-client-eap-transactions.192.168.99.100.nip.io/tx-client/api/ejb/stateless/arg'
+APP=tx-client
+oc scale sts $APP --replicas=0; while `oc get pods | grep -q $APP-0`;\
+  do echo "sleeping one second"; sleep 1; done; echo done; oc scale sts $APP --replicas=1
 ```
 
-# Troubleshooting
+* Forcing periodic recovery to be executed
 
 ```
-oc build-logs tx-client-1
-# oc login -u system:admin
-oc rsh `oc get pods -n tx-client | grep Running | awk '{print $1}'
+RECOVERY_FOR_POD=tx-client-0
+oc rsh $RECOVERY_FOR_POD java -cp /opt/eap/modules/system/layers/base/org/jboss/jts/main/narayana-jts-idlj-5.9.0.Final-redhat-00001.jar com.arjuna.ats.arjuna.tools.RecoveryMonitor -host $RECOVERY_FOR_POD -port 4712 -timeout 1800000
 ```
 
-CLI reference: https://docs.openshift.com/enterprise/3.0/cli_reference/basic_cli_operations.html
-
-# adding a user
-
-Create a user called ejbuser that will be used for securing remote EJB calls:
-
-Adding a user using the add-user.sh command generates an application-users.properties file which
-needs be added to the S2I builds configuration directory.
-It also also generates the secret that that needs to be placed in the client servers config file:
-
-> To represent the user add the following to the server-identities definition &lt;secret value="dGVzdDEyMzQh" /&gt;
+* Setting `com.arjuna` for `TRACE` logging level for all active pods
 
 ```
-h-4.2$ pwd
-/opt/eap/standalone/configuration
-sh-4.2$ ../../bin/add-user.sh
-
-What type of user do you wish to add?
- a) Management User (mgmt-users.properties)
- b) Application User (application-users.properties)
-(a): b
-
-Enter the details of the new user to add.
-Using realm 'ApplicationRealm' as discovered from the existing property files.
-Username : ejb
-Password requirements are listed below. To modify these restrictions edit the add-user.properties configuration file.
- - The password must not be one of the following restricted values {root, admin, administrator}
- - The password must contain at least 8 characters, 1 alphabetic character(s), 1 digit(s), 1 non-alphanumeric symbol(s)
- - The password must be different from the username
-Password :
-Re-enter Password :
-What groups do you want this user to belong to? (Please enter a comma separated list, or leave blank for none)[  ]:
-About to add user 'ejb' for realm 'ApplicationRealm'
-Is this correct yes/no? yes
-Added user 'ejb' to file '/opt/eap/standalone/configuration/application-users.properties'
-Added user 'ejb' with groups  to file '/opt/eap/standalone/configuration/application-roles.properties'
-Is this new user going to be used for one AS process to connect to another AS process?
-e.g. for a slave host controller connecting to the master or for a Remoting connection for server to server EJB calls.
-yes/no? yes
+for I in `oc get pods | grep Running | grep -E '(tx-server)|(tx-client)' | awk '{print $1}'`; do
+  echo "Changing log category 'com.arjuna' to level TRACE on '$I'"
+  oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=com.arjuna:write-attribute(name=level,value=TRACE)'
+done
 ```
 
-To represent the user add the following to the server-identities definition `<secret value="dGVzdDEyMzQh" />`
-
-# to debug
+or
 
 ```
-# debug apps: https://blog.openshift.com/debugging-java-applications-on-openshift-kubernetes/
-oc expose service tx-server
-oc set env dc/tx-server DEBUG=true # Enable the debug port
-oc get pods
-oc port-forward tx-client-3-jqn4x 8787:8787 &
-oc port-forward tx-server-4-rrr2l 8788:8788 &
+for I in `oc get pods | grep Running | grep 'tx-client' | awk '{print $1}'`; do
+  oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=com.arjuna:write-attribute(name=level,value=TRACE)'
+  oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.as.quickstarts:add(level=TRACE)'&
+  oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.ejb.client:add(level=TRACE)'&
+  oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.as.remoting:add(level=TRACE)'&
+  oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.remoting3:add(level=TRACE)'&
+  oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.ejb.protocol.remote:add(level=TRACE)'&
+  # oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jgroups.protocols.kubernetes:add(level=TRACE)'&
+done
 ```
 
-# Re-build
-
-```
-# starting the new build which clones changes from github
-oc start-build tx-server
-# use '-n' to optionally to define namespace/project if you switched to a different one -n eap-transactions
-# use '--follow' to see in console output of the build (or later with 'oc logs build tx-server-#'
-
-# command to start new pod with the newly built code
-oc rollout latest tx-server
-```
-
-NOTE: the same can be run for the `tx-client` service
-
-# Starting as standalone with WildFly cluster
-
-* copy WildFly distro to two server directories (e.g. `wfly-server1`, `wfly-server2`)
-* run them like `./bin/standalone.sh -c standalone-ha.xml` and `./bin/standalone.sh -c standalone-ha.xml -Djboss.socket.binding.port-offset=100 -Djboss.node.name=anothernode`
-** be sure to define unique node name for each app server as it's needed for cluster to work correctly
-
-# NOTES
-
-* discovery of ejb clients at https://github.com/wildfly/jboss-ejb-client/blob/master/src/main/java/org/jboss/ejb/client/DiscoveryEJBClientInterceptor.java
-* lookup for pods by selector and select their names (see http://blog.chalda.cz/2018/02/28/Querying-Open-Shift-API.html)
+* Lookup for pods by selector and select their names (see http://blog.chalda.cz/2018/02/28/Querying-Open-Shift-API.html)
   `curl -k   -H "Authorization: Bearer $TOKEN"   -H 'Accept: application/json'   https://${ENDPOINT}/api/v1/namespaces/$NAMESPACE/pods?labelSelector=app%3Dtx-server | jq '.items[].metadata.name'`
-* what the state after pod is installed means?
-  ```
-  NAME                READY     STATUS             RESTARTS   AGE
-  alpine-testing      0/1       CrashLoopBackOff   5          3m
-  ...
-  ```
-  That means there was possibly defined a `command` which is executed in the container
-  and the container exits immediatelly after start up
-  A good thing is to check what `oc describe pod <name>` will talk about e.g. 'command' etc.
-* if you want to check something from inside your cluster you can run a test docker fedora image like
+
+
+* Checking something from inside of the cluster you can run a test docker fedora image like
   `oc run -i --tty fedora-testing --image=fedora --restart=Never -- bash`
   (https://kubernetes.io/blog/2015/10/some-things-you-didnt-know-about-kubectl_28/)
 * find out ip address to DNS record: `getent hosts openshift.default.svc`
-* error
-  ```
-  WARN  [org.jgroups.protocols.openshift.KUBE_PING] (ServerService Thread Pool -- 69) Problem getting Pod json from Kubernetes Client[masterUrl=https://172.30.0.1:443/api/v1, headers={}, connectTimeout=5000, readTimeout=30000, operationAttempts=3, operationSleep=1000, streamProvider=org.openshift.ping.common.stream.TokenStreamProvider@13e58e86] for cluster [ee], namespace [eap-transactions], labels [app=tx-server]; encountered [java.lang.Exception: 3 attempt(s) with a 1000ms sleep to execute [OpenStream] failed. Last failure was [java.io.IOException: Server returned HTTP response code: 403 for URL: https://172.30.0.1:443/api/v1/namespaces/eap-transactions/pods?labelSelector=app%3Dtx-server]]
-  ```
-  could mean there is no `view` RBAC permission for the user to list pods (see http://blog.chalda.cz/2018/02/28/Querying-Open-Shift-API.html)
-  The fast way to fix it is to permit the default system user being a viewer
-  ```
-  oc login -u system:admin
-  oc policy add-role-to-user view -z default
-  ```
-  or the shortcut as:  oc policy add-role-to-user view system:serviceaccount:$(oc project -q):default -n $(oc project -q)
-* to check what is the cluster view 
-  ```
-  oc get pods
-  oc rsh tx-server-###
-    /opt/eap/bin/jboss-cli.sh -c 
-    /subsystem=jgroups/channel=ee:read-resource(include-runtime=true) #, recursive=true
-    /subsystem=jgroups/channel=ee/protocol=openshift.KUBE_PING:read-resource(include-runtime=true)
-  ```
-* if your run the web application in needs to be defined as `<distributable/>` in web.xml
-* the `@org.jboss.ejb3.annotation.Clustered` annotation is in `org.jboss.ejb3:jboss-ejb3-ext-api:2.2.0.Final`
-* cluster nodes start to try to communicate with each other only when it's deployed application
-  which requires clustering. Or if there is some settings requiring it - for example HA for messaging or similar.
-* clustering for remote ejb calls described somehow here: http://www.mastertheboss.com/jboss-server/jboss-cluster/ejb-to-ejb-communication-in-a-cluster-jboss-as-7-wildfly
-* to run the `tx-client` copy the `standalone-client.xml` to the `$JBOSS_HOME/standalone/configuration` and start like
-  `./bin/standalone.sh -c standalone-client.xml  -Djboss.socket.binding.port-offset=200 -Dtx.server.host=localhost`
-* setup logging for the quickstarts to show more info for all servers
-  `for I in 9990 10090 10190; do ./bin/jboss-cli.sh -c --controller=localhost:$I '/subsystem=logging/logger=org.jboss.as.quickstarts:add(level=TRACE)'; done`
-* running curl on the ejb endpoint `curl -XGET localhost:8280/tx-client/api/ejb/stateless/arg` to see what the application does
-* now about configuration. For the things to work the tx-client needs to define 'standalone.xml' remote outbound connection to one from the servers
+
+
+* RBAC permission to add the default service account to view all in the namespace
+  `oc policy add-role-to-user view system:serviceaccount:$(oc project -q):default -n $(oc project -q)`
+
+### Appendix 3: Outbound connection standalone.xml changes
+
 ```
   <security-realm name="ejb-security-realm">
       <server-identities>
@@ -245,40 +235,34 @@ and configure the `jboss-ejb-client.xml` descriptor with that
 * you can define multiple remote outbound connections and declare them in the `jboss-ejb-client.xml`. Then if server fails the client tries another server to connect.
   There is no loadbalancing as in case of the cluster ejb.
 
-## DevOps
+* to setup the authentication for JTA as workaround for the Elytron JTA remoting authentication issue. You need to define `custom-config.xml`
+  which is provided with the system property `wildfly.config.url` (see [eap72-stateful-set.json](eap72-stateful-set.json#L439) )
 ```
-cp tx-server/target/tx-server.war ~/tmp/wfly-server1/standalone/deployments/;cp tx-server/target/tx-server.war ~/tmp/wfly-server2/standalone/deployments/;cp tx-client/target/tx-client.war ~/tmp/wfly-client/standalone/deployments
-```
-
-To set-up a logging to see information about the quickstart processing and the remoting processing
-
-```
-for I in `oc get pods | grep Running | grep 'tx-server' | awk '{print $1}'`; do
-  oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.as.quickstarts:add(level=TRACE)'
-done
-```
-and
-
-```
-for I in `oc get pods | grep Running | grep 'tx-client' | awk '{print $1}'`; do
-  oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.as.quickstarts:add(level=TRACE)'&
-  oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.ejb.client:add(level=TRACE)'&
-  oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.as.remoting:add(level=TRACE)'&
-  oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.remoting3:add(level=TRACE)'&
-  oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.ejb.protocol.remote:add(level=TRACE)'&
-  oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jgroups.protocols.kubernetes:add(level=TRACE)'&
-done
-```
-
-### TODO - configure kube ping clustering
-
-```
-oc set env dc/tx-client OPENSHIFT_KUBE_PING_LABELS='app=tx-client' OPENSHIFT_KUBE_PING_NAMESPACE='eap-transactions'
-oc set env dc/tx-server OPENSHIFT_KUBE_PING_LABELS='app=tx-server' OPENSHIFT_KUBE_PING_NAMESPACE='eap-transactions'
+<configuration>
+    <authentication-client xmlns="urn:elytron:1.0">
+	<authentication-rules>
+            <rule use-configuration="jta">
+                <match-abstract-type name="jta" authority="jboss"/>
+	    </rule>
+        </authentication-rules>
+        <authentication-configurations>
+	     <configuration name="jta">
+                 <sasl-mechanism-selector selector="DIGEST-MD5"/>
+                 <providers>
+                     <use-service-loader />
+	         </providers>
+		 <set-user-name name="ejb"/>
+	         <credentials>
+                      <clear-password password="ejb"/>
+	         </credentials>
+                 <set-mechanism-realm name="ApplicationRealm" />
+             </configuration>
+        </authentication-configurations>
+    </authentication-client>
+</configuration>
 ```
 
-How to create cluster selector for ejb client
-
-* http://git.app.eng.bos.redhat.com/git/jbossqe/eap-tests-ejb.git/tree/ejb-multi-server-ts/src/test/java/org/jboss/qa/ejb/tests/clusternodeselector/ClusterNodeSelectorTestCase.java#n98
-* http://git.app.eng.bos.redhat.com/git/jbossqe/eap-tests-ejb.git/tree/ejb-multi-server-ts/src/test/java/org/jboss/qa/ejb/tests/clusternodeselector/CustomClusterNodeSelector.java
-* cluster node selector in `jboss-ejb-client.xml` : https://developer.jboss.org/thread/198898
+* if you run the queries on the HTTP endpoints of the WFLY container to get status etc.
+  (runnig like this: `curl  --digest -XGET  http://localhost:9990/management?operation=attribute\&name=server-state`)
+  and you don't want to care about authentication you need to have defined `<http-interface console-enabled="false">`
+  and not `<http-interface security-realm="ManagementRealm">`
