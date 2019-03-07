@@ -1,6 +1,7 @@
 
 keystore.jks
 notes
+wfly-init.script
 
 # Maven and Eclipse
 .classpath

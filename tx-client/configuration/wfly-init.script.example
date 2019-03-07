@@ -1,4 +1,4 @@
-# /subsystem=logging/logger=com.arjuna:write-attribute(name=level,value=TRACE)
+/subsystem=logging/logger=com.arjuna:write-attribute(name=level,value=TRACE)
 # /subsystem=logging/logger=com.arjuna:write-attribute(name=level,value=TRACE)
 # /subsystem=logging/logger=org.jboss.as.quickstarts:add(level=TRACE)
 # /subsystem=logging/logger=org.jboss.ejb.client:add(level=TRACE)
