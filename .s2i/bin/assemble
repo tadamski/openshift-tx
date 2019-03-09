@@ -1,0 +1,23 @@
+#!/bin/sh
+
+#
+# Even when building the root directory
+# if we work with artifacts from tx-client or tx-server
+#   we need to take configuration from their directories as well
+#
+
+CONF_DIR=`readlink -m "/tmp/src/${ARTIFACT_DIR}/../configuration"`
+echo "$ARTIFACT_DIR: expected configuration directory is at: $CONF_DIR"
+
+if [ -d "$CONF_DIR" ]; then
+  mkdir "/tmp/src/configuration" ||\
+    echo "Not creating new '/tmp/src/configuration' directory as it's available at /tmp/src already with content:" &&\
+    ls "/tmp/src/configuration"
+  echo " >>> Copying configuration files from $CONF_DIR to /tmp/src/configuration"
+  cp -r "${CONF_DIR}"/* /tmp/src/configuration
+fi
+
+# This assemble script overrides the default one
+# we need to wrap the execution with our cofiguration changes
+# but then run the default assemble
+source /usr/local/s2i/assemble

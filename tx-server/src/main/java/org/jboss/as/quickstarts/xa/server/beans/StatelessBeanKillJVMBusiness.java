@@ -11,9 +11,9 @@ import javax.transaction.RollbackException;
 import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
 
+import org.jboss.as.quickstarts.xa.resources.MockXAResource;
+import org.jboss.as.quickstarts.xa.resources.StatusUtils;
 import org.jboss.as.quickstarts.xa.server.StatelessRemote;
-import org.jboss.as.quickstarts.xa.server.resources.MockXAResource;
-import org.jboss.as.quickstarts.xa.server.resources.Utils;
 import org.jboss.logging.Logger;
 
 @Stateless
@@ -29,7 +29,7 @@ public class StatelessBeanKillJVMBusiness implements StatelessRemote {
     public int transactionStatus() throws RemoteException {
         try {
             int status = manager.getStatus();
-            log.infof("Calling 'transactionStatus', status is %s", Utils.status(status));
+            log.infof("Calling 'transactionStatus', status is %s", StatusUtils.status(status));
             return status;
         } catch (SystemException e) {
             throw new RemoteException("Can't get transaction status", e);
@@ -40,7 +40,7 @@ public class StatelessBeanKillJVMBusiness implements StatelessRemote {
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public int call() throws RemoteException {
         try {
-            log.infof("Calling 'call' with txn status %s", Utils.status(manager.getStatus()));
+            log.infof("Calling 'call' with txn status %s", StatusUtils.status(manager.getStatus()));
             manager.getTransaction().enlistResource(new MockXAResource());
             Runtime.getRuntime().halt(1);
             return 0;

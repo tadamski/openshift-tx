@@ -5,8 +5,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
-import org.jboss.as.quickstarts.xa.client.resources.Utils;
-
 @Path("ejb")
 public class EJBTestCallerRestEndpoints {
 
@@ -20,7 +18,7 @@ public class EJBTestCallerRestEndpoints {
     @Path("stateless-pass")
     @Produces("text/plain")
     public String testToPass() {
-        BeanTestToPass bean = Utils.lookupModuleEJB(BeanTestToPass.class, null);
+        BeanTestToPass bean = LookupHelper.lookupModuleEJB(BeanTestToPass.class, null);
         return bean.call();
     }
 

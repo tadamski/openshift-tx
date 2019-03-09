@@ -11,7 +11,7 @@ import javax.transaction.NotSupportedException;
 import javax.transaction.Status;
 import javax.transaction.UserTransaction;
 
-import org.jboss.as.quickstarts.xa.client.resources.Utils;
+import org.jboss.as.quickstarts.xa.resources.StatusUtils;
 import org.jboss.as.quickstarts.xa.server.StatelessRemote;
 import org.jboss.logging.Logger;
 
@@ -27,13 +27,13 @@ public class BeanTestToPass {
     public String call() {
         StatelessRemote bean;
         try {
-            bean = Utils.lookupRemoteEJBOutbound(BEAN_NAME, StatelessRemote.class, null);
+            bean = LookupHelper.lookupRemoteEJBOutbound(BEAN_NAME, StatelessRemote.class, null);
 
             log.infof("Calling remote bean '%s' to find out the status of transaction", bean);
             int status = bean.transactionStatus();
             log.infof("Transaction status from 'transactionStatus' is %s", status);
             if(Status.STATUS_NO_TRANSACTION != status) {
-                return "ERROR: No transaction expected but transaction status was " + Utils.status(status);
+                return "ERROR: No transaction expected but transaction status was " + StatusUtils.status(status);
             }
         } catch (NamingException ne) {
             log.errorf(ne, "Cannot lookup EJB bean '%s'", BEAN_NAME);
@@ -49,7 +49,7 @@ public class BeanTestToPass {
             int status = bean.call();
             log.infof("Transaction status from 'call' is %s", status);
             if(status != Status.STATUS_ACTIVE) {
-                return "ERROR: Active transaction expected but was " + Utils.status(status);
+                return "ERROR: Active transaction expected but was " + StatusUtils.status(status);
             }
             userTransaction.commit();
         } catch (NotSupportedException  nse) {
