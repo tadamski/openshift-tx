@@ -34,6 +34,19 @@ curl -XGET "http://tx-client-`oc project -q`.`minishift ip`.nip.io/tx-client/api
 curl -XGET "http://tx-client-`oc project -q`.`minishift ip`.nip.io/tx-client/api/ejb/stateless-jvm-halt-on-prepare-server"
 ```
 
+## Changes in WildFly/EAP configuration
+
+The standalone-openshift.xml configuration is based on the EAP72 configuration
+available at https://github.com/jboss-container-images/jboss-eap-modules/blob/master/jboss-eap72-openshift/added/standalone-openshift.xml.
+
+The configuration changes that are needed for the EJB remoting works correctly are:
+
+* setting up [remote outbound connection](https://access.redhat.com/documentation/en-us/red_hat_jboss_enterprise_application_platform/7.0/html/configuration_guide/configuring_remoting#remoting_remote_outbound_connection), see [standalone-openshift.xml](https://github.com/tadamski/openshift-tx/blob/e78a49b8e6e2461c7a1d61aab60aa6e3db1d1c35/tx-client/configuration/standalone-openshift.xml#L507)
+* do not use `bindall` as there is know bug in clustering/remoting, see https://issues.jboss.org/browse/JBEAP-15874
+* configuration of security needs to be defined in by property `-Dwildfly.config.url` with definition that [custom-config.xml](tx-client/configuration/custom-config.xml), setup in [OpenShift template](https://github.com/tadamski/openshift-tx/blob/e78a49b8e6e2461c7a1d61aab60aa6e3db1d1c35/eap72-stateful-set.json#L452), see https://issues.jboss.org/browse/JBEAP-15738
+* the _tx-server_ defines `client-mapping` (`<client-mapping destination-address="${jboss.node.name}.tx-server"/>`) for the http `socket-binding`, see https://issues.jboss.org/browse/JBEAP-16420
+* TODO: issue on programmatic authentication is here https://issues.jboss.org/browse/JBEAP-16149
+
 ## Notes on "How to run"
 
 * if you want to run from different git repo and branch
