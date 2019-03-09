@@ -1,4 +1,4 @@
-package org.jboss.as.quickstarts.xa.server.resources;
+package org.jboss.as.quickstarts.xa.resources;
 
 import java.io.File;
 import java.io.FileInputStream;

@@ -16,17 +16,121 @@ Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 02110-1301, USA.
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>com.redhat.xpaas.eap.deployments</groupId>
-  <version>1.0.0-SNAPSHOT</version>
-  <artifactId>txn-ejb-on-openshift</artifactId>
-  <packaging>pom</packaging>
-  <name>Transaction Propagation between EJBs</name>
-  <description>Test transaction propagation on OpenShift</description>
-  <url>http://www.jboss.org/jbosstm</url>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.redhat.xpaas.eap.deployments</groupId>
+    <artifactId>txn-ejb-on-openshift</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>JBoss EAP - Transaction Propagation between EJBs</name>
+    <description>Test transaction propagation on OpenShift for EJB to EJB communication</description>
+    <url>http://www.jboss.org/jbosstm</url>
 
-  <modules>
-    <module>tx-server</module>
-    <module>tx-client</module>
-  </modules>
+    <properties>
+    	<version.jboss.spec.javaee.7.0>1.1.0.Final-redhat-3</version.jboss.spec.javaee.7.0>
+    	<version.server.bom>7.1.0.GA</version.server.bom>
+    </properties>
+
+    <!-- Activate JBoss Product Maven repository.
+
+        NOTE: Configuring the Maven repository in the pom.xml file is not a recommended procedure
+        and is only done here to make it easier to use the quickstarts.
+
+        For more information about how to configure Maven for your application,
+        see the section entitled 'Use the Maven Repository'
+        in the Development Guide for Red Hat JBoss Enterprise Application Platform located here:
+
+        https://access.redhat.com/documentation/en/jboss-enterprise-application-platform/
+    -->
+    <repositories>
+        <repository>
+            <id>jboss-enterprise-maven-repository</id>
+            <url>https://maven.repository.redhat.com/ga/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>jboss-enterprise-maven-repository</id>
+            <url>https://maven.repository.redhat.com/ga/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </pluginRepository>
+    </pluginRepositories>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- JBoss distributes a complete set of Java EE APIs including a Bill
+                of Materials (BOM). A BOM specifies the versions of a "stack" (or a collection)
+                of artifacts. We use this here so that we always get the correct versions
+                of artifacts. Here we use the jboss-eap-javaee7-with-tools stack (you can
+                read this as the JBoss stack of the Java EE APIs, with some extras tools
+                for your project, such as Arquillian for testing) -->
+            <dependency>
+                <groupId>org.jboss.bom</groupId>
+                <artifactId>jboss-eap-javaee7-with-tools</artifactId>
+                <version>${version.server.bom}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- Define the version of the JBoss Java EE APIs we want to use -->
+            <!-- JBoss distributes a complete set of Java EE APIs including
+               a Bill of Materials (BOM). A BOM specifies the versions of a "stack" (or
+               a collection) of artifacts. We use this here so that we always get the correct
+               versions of artifacts. Here we use the jboss-javaee-7.0 stack (you can
+               read this as the JBoss stack of the Java EE APIs). You can actually
+               use this stack with any version of JBoss EAP that implements Java EE. -->
+            <dependency>
+                <groupId>org.jboss.spec</groupId>
+                <artifactId>jboss-javaee-7.0</artifactId>
+                <version>${version.jboss.spec.javaee.7.0}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <distributionManagement>
+        <repository>
+            <id>nexus-fabric</id>
+            <url>http://nexus-fabric.192.168.99.100.nip.io/content/repositories/releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>nexus-fabric</id>
+            <url>http://nexus-fabric.192.168.99.100.nip.io/content/repositories/snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>none</phase>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <modules>
+        <module>tx-common</module>
+        <module>tx-server</module>
+        <module>tx-client</module>
+    </modules>
 </project>

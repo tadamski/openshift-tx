@@ -1,9 +1,7 @@
-package org.jboss.as.quickstarts.xa.server.resources;
+package org.jboss.as.quickstarts.xa.resources;
 
-import org.jboss.logging.Logger;
-
-public final class Utils {
-    private Utils() throws IllegalAccessException {
+public final class StatusUtils {
+    private StatusUtils() throws IllegalAccessException {
         throw new IllegalAccessException("utility class, do not instantiate");
     }
 

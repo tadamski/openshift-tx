@@ -10,9 +10,9 @@ oc create -f ./eap72-image-stream.json
 # statefulset template creation
 oc create -f ./eap72-stateful-set.json
 # startup tx-server service
-oc new-app --template=eap72-stateful-set -p APPLICATION_NAME=tx-server -p CONTEXT_DIR=tx-server
+oc new-app --template=eap72-stateful-set -p APPLICATION_NAME=tx-server -p ARTIFACT_DIR=tx-server/target
 # startup tx-client service
-oc new-app --template=eap72-stateful-set -p APPLICATION_NAME=tx-client -p CONTEXT_DIR=tx-client
+oc new-app --template=eap72-stateful-set -p APPLICATION_NAME=tx-client -p ARTIFACT_DIR=tx-client/target
 ```
 
 ## How to invoke particular "test cases"
@@ -51,7 +51,7 @@ The configuration changes that are needed for the EJB remoting works correctly a
 
 * if you want to run from different git repo and branch
 ```
-oc new-app --template=eap72-stateful-set -p APPLICATION_NAME=tx-client -p CONTEXT_DIR=tx-client -p SOURCE_REPOSITORY_URL=https://github.com/ochaloup/openshift-tx.git -p SOURCE_REPOSITORY_REF=master
+oc new-app --template=eap72-stateful-set -p APPLICATION_NAME=tx-client -p ARTIFACT_DIR=tx-client/target -p SOURCE_REPOSITORY_URL=https://github.com/ochaloup/openshift-tx.git -p SOURCE_REPOSITORY_REF=master
 ```
 
 * for scaling
@@ -113,14 +113,18 @@ oc create -f eap72-image-stream.json
 oc create -f eap72-stateful-set.json
 REF=tadamski-master-unchanged-my-changes
 REPO=ochaloup
-oc new-app --template=eap72-stateful-set -p APPLICATION_NAME=tx-client -p CONTEXT_DIR=tx-client -p SOURCE_REPOSITORY_URL=https://github.com/${REPO}/openshift-tx.git -p SOURCE_REPOSITORY_REF=$REF
-oc new-app --template=eap72-stateful-set -p APPLICATION_NAME=tx-server -p CONTEXT_DIR=tx-server -p SOURCE_REPOSITORY_URL=https://github.com/${REPO}/openshift-tx.git -p SOURCE_REPOSITORY_REF=$REF
+oc new-app --template=eap72-stateful-set -p APPLICATION_NAME=tx-client -p ARTIFACT_DIR=tx-client/target -p SOURCE_REPOSITORY_URL=https://github.com/${REPO}/openshift-tx.git -p SOURCE_REPOSITORY_REF=$REF
+oc new-app --template=eap72-stateful-set -p APPLICATION_NAME=tx-server -p ARTIFACT_DIR=tx-server/target -p SOURCE_REPOSITORY_URL=https://github.com/${REPO}/openshift-tx.git -p SOURCE_REPOSITORY_REF=$REF
 sleep 10; oc logs -f bc/tx-client
 ```
 
 * To build the code at the local machine and load the build to OpenShift, see
   https://docs.openshift.com/container-platform/3.6/dev_guide/dev_tutorials/binary_builds.html#binary-builds-local-code-changes.
-  When build is done (`oc get bc`) the StatefulSet does not redeploy automatically (TODO: not sure if it could be configured somewhere)
+  When build is done (`oc get bc`) the StatefulSet does not redeploy automatically (TODO: not sure if it could be configured somewhere).
+
+  The template defines the `BuildConfig` with source strategy `Git`. If the `start-build` is invoked then
+  [_it is dynamically disabled, since Binary and Git are mutually exclusive, and the data in the binary stream provided to the builder takes precedence_](https://docs.okd.io/latest/dev_guide/builds/build_inputs.html#binary-source).
+  It means that `BuildConfig` defined by template is change to be `Binary` when `start-build` is used.
 
 ```
 cd openshift-tx
@@ -129,6 +133,20 @@ oc start-build tx-client --from-dir="." --follow
 # to build tx-server `bc/tx-server`
 oc start-build tx-server --from-dir="." --follow
 ```
+
+* If we work with the build - for example changing `.s2i/bin/assemble` script it's
+  needed to create a new build to accommodate such changes. We can delete
+  the whole build and create a new one with the `oc new-build` command.
+  We define to be `Binary` which means no build is done automatically
+  and what is about to be build is specified by `start-build`.
+
+```
+oc delete bc tx-client
+oc new-build --image-stream=eap-transactions/jboss-eap72-openshift:latest --to=tx-client:latest\
+  -eARTIFACT_DIR=tx-client/target -eMAVEN_ARGS_APPEND='-Dcom.redhat.xpaas.repo.jbossorg' --binary=true
+oc start-build tx-client --from-dir="." --follow
+```
+
 
 * To run the new build (if there is some, see above) you need to scale down and up
   the StatefulSet. This oneliner could help with that
@@ -181,6 +199,9 @@ done
 
 * RBAC permission to add the default service account to view all in the namespace
   `oc policy add-role-to-user view system:serviceaccount:$(oc project -q):default -n $(oc project -q)`
+
+* Troubles with building s2i. Run the s2i localy to see what's happen
+  `s2i build ./ registry.access.redhat.com/jboss-eap-7/eap72-openshift:latest  local/testing-tx-client`
 
 ### Appendix 3: Outbound connection standalone.xml changes
 

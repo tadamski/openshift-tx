@@ -11,9 +11,9 @@ import javax.transaction.RollbackException;
 import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
 
+import org.jboss.as.quickstarts.xa.resources.MockXAResource;
+import org.jboss.as.quickstarts.xa.resources.StatusUtils;
 import org.jboss.as.quickstarts.xa.server.StatelessRemote;
-import org.jboss.as.quickstarts.xa.server.resources.MockXAResource;
-import org.jboss.as.quickstarts.xa.server.resources.Utils;
 import org.jboss.logging.Logger;
 
 @Stateless
@@ -28,7 +28,7 @@ public class StatelessBeanKillOnPrepare extends StatelessToPassBean {
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public int call() throws RemoteException {
         try {
-            log.infof("Calling 'call' with txn status %s", Utils.status(manager.getStatus()));
+            log.infof("Calling 'call' with txn status %s", StatusUtils.status(manager.getStatus()));
             manager.getTransaction().enlistResource(new MockXAResource(MockXAResource.TestAction.PREPARE_JVM_HALT));
             return 0;
         } catch (RollbackException | SystemException e) {

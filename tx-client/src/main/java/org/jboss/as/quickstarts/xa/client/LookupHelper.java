@@ -1,4 +1,4 @@
-package org.jboss.as.quickstarts.xa.client.resources;
+package org.jboss.as.quickstarts.xa.client;
 
 import java.util.Properties;
 
@@ -6,31 +6,11 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
-public class Utils {
+public class LookupHelper {
     private static final String JNDI_PKG_PREFIXES = "org.jboss.ejb.client.naming";
 
-    public static String status(int status) {
-        switch (status) {
-            case javax.transaction.Status.STATUS_ACTIVE:
-                return "javax.transaction.Status.STATUS_ACTIVE";
-            case javax.transaction.Status.STATUS_COMMITTED:
-                return "javax.transaction.Status.STATUS_COMMITTED";
-            case javax.transaction.Status.STATUS_MARKED_ROLLBACK:
-                return "javax.transaction.Status.STATUS_MARKED_ROLLBACK";
-            case javax.transaction.Status.STATUS_NO_TRANSACTION:
-                return "javax.transaction.Status.STATUS_NO_TRANSACTION";
-            case javax.transaction.Status.STATUS_PREPARED:
-                return "javax.transaction.Status.STATUS_PREPARED";
-            case javax.transaction.Status.STATUS_PREPARING:
-                return "javax.transaction.Status.STATUS_PREPARING";
-            case javax.transaction.Status.STATUS_ROLLEDBACK:
-                return "javax.transaction.Status.STATUS_ROLLEDBACK";
-            case javax.transaction.Status.STATUS_ROLLING_BACK:
-                return "javax.transaction.Status.STATUS_ROLLING_BACK";
-            case javax.transaction.Status.STATUS_UNKNOWN:
-            default:
-                return "javax.transaction.Status.STATUS_UNKNOWN";
-        }
+    private LookupHelper() throws IllegalAccessException {
+        throw new IllegalAccessException("Utility class, cannot be instantiated");
     }
 
     public static <T> T lookupRemoteEJBOutbound(Class<? extends T> beanImplClass, Class<T> remoteInterface, boolean isStateful, Properties ejbProperties) throws NamingException {
@@ -67,5 +47,4 @@ public class Utils {
             throw new IllegalStateException("Not possible to lookup bean " + beanImplClass.getName(), ne);
         }
     }
-
 }
