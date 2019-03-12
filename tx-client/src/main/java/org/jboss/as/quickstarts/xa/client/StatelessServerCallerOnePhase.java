@@ -15,12 +15,12 @@ import org.jboss.logging.Logger;
  * without <code>prepare</code>.
  */
 @Stateless
-public class BeanTestServerCallerOnePhase {
-    private static final Logger log = Logger.getLogger(BeanTestServerCallerOnePhase.class);
+public class StatelessServerCallerOnePhase {
+    private static final Logger log = Logger.getLogger(StatelessServerCallerOnePhase.class);
 
     public String call(String beanName) {
         try {
-            StatelessRemote bean = LookupHelper.lookupRemoteEJBOutbound(beanName, StatelessRemote.class, null);
+            StatelessRemote bean = LookupHelper.lookupRemoteStatelessEJBOutbound(beanName, StatelessRemote.class);
             int status = bean.call();
             log.debugf("Transaction status from 'call' is %s", status);
         } catch (Exception e) {

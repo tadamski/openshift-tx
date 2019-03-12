@@ -86,8 +86,14 @@ public class MockXAResource implements XAResource, XAResourceWrapper, Serializab
     }
 
     @Override
+    public void start(Xid xid, int flags) throws XAException {
+        LOG.debugf("start '%s' xid: [%s], flags: %s", this, xid, flags);
+        // currentXid = xid;
+    }
+
+    @Override
     public void end(Xid xid, int flags) throws XAException {
-        LOG.infof("end '%s' xid:[%s], flag: %s", this, xid, flags);
+        LOG.debugf("end '%s' xid:[%s], flag: %s", this, xid, flags);
     }
 
     @Override
@@ -98,7 +104,7 @@ public class MockXAResource implements XAResource, XAResourceWrapper, Serializab
 
     @Override
     public int getTransactionTimeout() throws XAException {
-        LOG.infof("getTransactionTimeout: '%s' returning timeout: %s", this, transactionTimeout);
+        LOG.debugf("getTransactionTimeout: '%s' returning timeout: %s", this, transactionTimeout);
         return transactionTimeout;
     }
 
@@ -125,12 +131,6 @@ public class MockXAResource implements XAResource, XAResourceWrapper, Serializab
         LOG.tracef("setTransactionTimeout: setting timeout: %s", seconds);
         this.transactionTimeout = seconds;
         return true;
-    }
-
-    @Override
-    public void start(Xid xid, int flags) throws XAException {
-        LOG.infof("start '%s' xid: [%s], flags: %s", this, xid, flags);
-        // currentXid = xid;
     }
 
     /**

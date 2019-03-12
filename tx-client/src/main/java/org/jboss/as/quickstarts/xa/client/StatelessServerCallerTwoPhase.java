@@ -17,15 +17,15 @@ import org.jboss.logging.Logger;
  * the two resources and two-phase commit without optimization is used.
  */
 @Stateless
-public class BeanTestServerCallerTwoPhase {
-    private static final Logger log = Logger.getLogger(BeanTestServerCallerTwoPhase.class);
+public class StatelessServerCallerTwoPhase {
+    private static final Logger log = Logger.getLogger(StatelessServerCallerTwoPhase.class);
 
     @Resource(lookup = "java:/TransactionManager")
     private TransactionManager manager;
 
     public String call(String beanName, MockXAResource.TestAction testAction) {
         try {
-            StatelessRemote bean = LookupHelper.lookupRemoteEJBOutbound(beanName, StatelessRemote.class, null);
+            StatelessRemote bean = LookupHelper.lookupRemoteStatelessEJBOutbound(beanName, StatelessRemote.class);
             manager.getTransaction().enlistResource(new MockXAResource(testAction));
             int status = bean.call();
             log.infof("Transaction status from 'call' is %s", status);
