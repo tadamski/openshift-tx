@@ -8,6 +8,14 @@ import org.jboss.as.quickstarts.xa.resources.MockXAResource;
 import org.jboss.as.quickstarts.xa.server.StatelessRemote;
 import org.jboss.logging.Logger;
 
+/**
+ * <p>
+ * Bean which enlists a {@link MockXAResource} and then does the EJB remote
+ * call to the second server.
+ * <p>
+ * Because the mock resource is enlisted first the transaction contains
+ * the two resources and two-phase commit without optimization is used.
+ */
 @Stateless
 public class BeanTestServerCallerTwoPhase {
     private static final Logger log = Logger.getLogger(BeanTestServerCallerTwoPhase.class);

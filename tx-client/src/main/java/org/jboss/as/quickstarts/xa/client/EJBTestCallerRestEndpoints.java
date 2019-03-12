@@ -5,6 +5,8 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
+import org.jboss.as.quickstarts.xa.resources.MockXAResource;
+
 @Path("ejb")
 public class EJBTestCallerRestEndpoints {
 
@@ -30,6 +32,13 @@ public class EJBTestCallerRestEndpoints {
     }
 
     @GET
+    @Path("stateless-jvm-halt-on-prepare-server")
+    @Produces("text/plain")
+    public String BeanTestToKillJVMOnPrepareServer() {
+        return serverCallerTwoPhase.callTestActionNone("StatelessBeanKillOnPrepare");
+    }
+
+    @GET
     @Path("stateless-jvm-halt-on-commit-server")
     @Produces("text/plain")
     public String testToHaltJVMOnCommitServer() {
@@ -37,9 +46,17 @@ public class EJBTestCallerRestEndpoints {
     }
 
     @GET
-    @Path("stateless-jvm-halt-on-prepare-server")
+    @Path("stateless-jvm-halt-on-prepare-client")
     @Produces("text/plain")
-    public String BeanTestToKillJVMOnPrepareServer() {
-        return serverCallerTwoPhase.callTestActionNone("StatelessBeanKillOnPrepare");
+    public String BeanTestToKillJVMOnPrepareClient() {
+        return serverCallerTwoPhase.call("StatelessToPassBean", MockXAResource.TestAction.PREPARE_JVM_HALT);
     }
+
+    @GET
+    @Path("stateless-jvm-halt-on-commit-client")
+    @Produces("text/plain")
+    public String testToHaltJVMOnCommitClient() {
+        return serverCallerTwoPhase.call("StatelessToPassBean", MockXAResource.TestAction.COMMIT_JVM_HALT);
+    }
+
 }

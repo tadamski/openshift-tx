@@ -16,7 +16,7 @@ public class MockXAResourceRecoveryHelper implements XAResourceRecoveryHelper {
 
     @Override
     public boolean initialise(String p) throws Exception {
-        MockXAResource.initPreparedXids(MockXAResourceStorage.recoverFromDisk());
+        // this is never called, probably...
         return true;
     }
 
