@@ -28,7 +28,7 @@ final class MockXAResourceStorage {
     static synchronized void writeToDisk(Collection<Xid> xidsToDisk) {
         Collection<Xid> writtableXidCollection = new ArrayList<>(xidsToDisk);
         File logStorageFile = getMockXAResourceTxnLogStore();
-        LOG.infof("logging xids: %s[number: %s] records to %s",
+        LOG.infof("writing to disk xids: %s[number: %s] records to %s",
                 writtableXidCollection, writtableXidCollection.size(), logStorageFile.getAbsolutePath());
 
         try (FileOutputStream fos = new FileOutputStream(logStorageFile); ObjectOutputStream oos = new ObjectOutputStream(fos)){

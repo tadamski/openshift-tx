@@ -12,28 +12,29 @@ import javax.transaction.Status;
 import javax.transaction.UserTransaction;
 
 import org.jboss.as.quickstarts.xa.resources.StatusUtils;
-import org.jboss.as.quickstarts.xa.server.StatelessRemote;
+import org.jboss.as.quickstarts.xa.server.StatefulRemote;
 import org.jboss.logging.Logger;
 
 /**
  * EJB using the {@link TransactionManagement} of <code>BEAN</code>
- * and makes first call without and then with the transaction context.
+ * and makes first call without and then with the transaction context
+ * while the Stateful bean is invoked.
  */
 @Stateless
 @TransactionManagement(TransactionManagementType.BEAN)
-public class BeanTestToPass {
-    private static final Logger log = Logger.getLogger(BeanTestToPass.class);
-    private static final String BEAN_NAME = "StatelessToPassBean";
+public class StatefulBeanManagedToPass {
+    private static final Logger log = Logger.getLogger(StatefulBeanManagedToPass.class);
+    private static final String BEAN_NAME = "StatefulToPassBean";
 
     @Resource
     private UserTransaction userTransaction;
 
     public String call() {
-        StatelessRemote bean;
+        StatefulRemote bean;
         try {
-            bean = LookupHelper.lookupRemoteEJBOutbound(BEAN_NAME, StatelessRemote.class, null);
+            bean = LookupHelper.lookupRemoteStatefulEJBOutbound(BEAN_NAME, StatefulRemote.class);
 
-            log.infof("Calling remote bean '%s' to find out the status of transaction", bean);
+            log.infof("Calling remote SFSB '%s' to find out the status of transaction", bean);
             int status = bean.transactionStatus();
             log.infof("Transaction status from 'transactionStatus' is %s", status);
             if(Status.STATUS_NO_TRANSACTION != status) {
@@ -47,14 +48,20 @@ public class BeanTestToPass {
             return "Error on calling remote bean " + BEAN_NAME;
         }
 
+        try {
+            bean.resetStatus();
+        } catch (RemoteException reStatus) {
+            log.errorf(reStatus, "Error on reseting status of remote bean '%s'", BEAN_NAME);
+            return "Error on reseting status of remote bean " + BEAN_NAME;
+        }
+
         // remote call transaction propagation
         try {
+            // two calls in the same transaction, if the second call does not provide
+            // the same transction then RemoteException is expected
             userTransaction.begin();
-            int status = bean.call();
-            log.infof("Transaction status from 'call' is %s", status);
-            if(status != Status.STATUS_ACTIVE) {
-                return "ERROR: Active transaction expected but was " + StatusUtils.status(status);
-            }
+            bean.sameTransaction(false);
+            bean.sameTransaction(true);
             userTransaction.commit();
         } catch (NotSupportedException  nse) {
             log.errorf(nse, "Cannot start transaction");

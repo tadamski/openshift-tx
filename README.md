@@ -27,11 +27,20 @@ curl -XGET "http://tx-client-`oc project -q`.`minishift ip`.nip.io/tx-client/api
 # stateless bean which crashes tx-server at the end of the business method (see StatelessBeanKillJVMBusiness.java)
 curl -XGET "http://tx-client-`oc project -q`.`minishift ip`.nip.io/tx-client/api/ejb/statless-jvm-halt-business"
 
+# stateless bean which crashes tx-server at XAResource.prepare (see StatelessBeanKillOnPrepare.java)
+curl -XGET "http://tx-client-`oc project -q`.`minishift ip`.nip.io/tx-client/api/ejb/stateless-jvm-halt-on-prepare-server"
+
 # stateless bean which crashes tx-server at XAResource.commit (see StatelessBeanKillOnCommit.java)
 curl -XGET "http://tx-client-`oc project -q`.`minishift ip`.nip.io/tx-client/api/ejb/stateless-jvm-halt-on-commit-server"
 
-# stateless bean which crashes tx-server at XAResource.prepare (see StatelessBeanKillOnPrepare.java)
-curl -XGET "http://tx-client-`oc project -q`.`minishift ip`.nip.io/tx-client/api/ejb/stateless-jvm-halt-on-prepare-server"
+# stateless bean which crashes tx-client at XAResource.prepare
+curl -XGET "http://tx-client-`oc project -q`.`minishift ip`.nip.io/tx-client/api/ejb/stateless-jvm-halt-on-prepare-client"
+
+# stateless bean which crashes tx-client at XAResource.commit
+curl -XGET "http://tx-client-`oc project -q`.`minishift ip`.nip.io/tx-client/api/ejb/stateless-jvm-halt-on-commit-client"
+
+# stateful bean without failures using `UserTransaction` to begin transaction
+curl -XGET "http://tx-client-`oc project -q`.`minishift ip`.nip.io/tx-client/api/ejb/stateful-pass"
 ```
 
 ## Changes in WildFly/EAP configuration
@@ -61,7 +70,7 @@ oc scale sts tx-server --replicas=0
 oc scale sts tx-client --replicas=0
 ```
 
-* to delete the namespace created
+* to delete the namespace/project created
 
 ```
 oc delete all --all; oc delete $(oc get pvc -o name); oc delete template eap72-stateful-set
@@ -134,6 +143,16 @@ oc start-build tx-client --from-dir="." --follow
 oc start-build tx-server --from-dir="." --follow
 ```
 
+* To run the new build (if there is some, see above) you need to scale down and up
+  the StatefulSet. This oneliner could help with that
+
+```
+APP=tx-server
+oc scale sts $APP --replicas=0; while `oc get pods | grep -q $APP-0`;\
+  do echo "sleeping one second"; sleep 1; done; echo done;\
+  oc scale sts $APP --replicas=1
+```
+
 * If we work with the build - for example changing `.s2i/bin/assemble` script it's
   needed to create a new build to accommodate such changes. We can delete
   the whole build and create a new one with the `oc new-build` command.
@@ -147,22 +166,10 @@ oc new-build --image-stream=eap-transactions/jboss-eap72-openshift:latest --to=t
 oc start-build tx-client --from-dir="." --follow
 ```
 
-
-* To run the new build (if there is some, see above) you need to scale down and up
-  the StatefulSet. This oneliner could help with that
-
-```
-APP=tx-client
-oc scale sts $APP --replicas=0; while `oc get pods | grep -q $APP-0`;\
-  do echo "sleeping one second"; sleep 1; done; echo done;\
-  oc delete pvc eapdata-$APP-0;\
-  oc scale sts $APP --replicas=1
-```
-
 * Forcing periodic recovery to be executed
 
 ```
-RECOVERY_FOR_POD=tx-client-0
+RECOVERY_FOR_POD=tx-server-0
 oc rsh $RECOVERY_FOR_POD java -cp /opt/eap/modules/system/layers/base/org/jboss/jts/main/narayana-jts-idlj-5.9.0.Final-redhat-00001.jar com.arjuna.ats.arjuna.tools.RecoveryMonitor -host $RECOVERY_FOR_POD -port 4712 -timeout 1800000
 ```
 
@@ -187,6 +194,14 @@ for I in `oc get pods | grep Running | grep 'tx-client' | awk '{print $1}'`; do
   oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jboss.ejb.protocol.remote:add(level=TRACE)'&
   # oc rsh $I /opt/eap/bin/jboss-cli.sh -c '/subsystem=logging/logger=org.jgroups.protocols.kubernetes:add(level=TRACE)'&
 done
+```
+
+* Getting info from the JBoss CLI about Narayana object store
+
+```
+oc rsh tx-client-0 /opt/eap/bin/jboss-cli.sh -c
+/subsystem=transactions/log-store=log-store:probe()
+/subsystem=transactions/log-store=log-store:read-resource(recursive=true)
 ```
 
 * Lookup for pods by selector and select their names (see http://blog.chalda.cz/2018/02/28/Querying-Open-Shift-API.html)

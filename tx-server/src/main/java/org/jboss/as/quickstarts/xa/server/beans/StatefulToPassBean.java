@@ -17,8 +17,8 @@ import org.jboss.logging.Logger;
 
 @Remote(StatefulRemote.class)
 @Stateful
-public class StatefulBean implements SessionSynchronization, StatefulRemote {
-    private static final Logger log = Logger.getLogger(StatefulBean.class);
+public class StatefulToPassBean implements SessionSynchronization, StatefulRemote {
+    private static final Logger log = Logger.getLogger(StatefulToPassBean.class);
 
     private Boolean commitSucceeded;
     private boolean beforeCompletion = false;
@@ -34,13 +34,14 @@ public class StatefulBean implements SessionSynchronization, StatefulRemote {
 
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public int transactionStatus() {
-        log.debug("StatefulBean:transactionStatus");
-        return transactionSynchronizationRegistry.getTransactionStatus();
+        int status = transactionSynchronizationRegistry.getTransactionStatus();
+        log.infof("StatefulBean:transactionStatus -> %s", status);
+        return status;
     }
 
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public void resetStatus() {
-        log.debug("StatefulBean:resetStatul");
+        log.info("StatefulBean:resetStatus");
         commitSucceeded = null;
         beforeCompletion = false;
         transactionKey = null;
@@ -54,10 +55,13 @@ public class StatefulBean implements SessionSynchronization, StatefulRemote {
 
     @TransactionAttribute(TransactionAttributeType.MANDATORY)
     public void sameTransaction(boolean first) throws RemoteException {
-        log.debug("StatefulBean:sameTransaction");
+        log.info("StatefulBean:sameTransaction -> " + (first ? "first" : "next follow-up (second)"));
         if (first) {
             transactionKey = transactionSynchronizationRegistry.getTransactionKey();
         } else {
+            if (transactionKey == null) {
+                throw new NullPointerException("not expecting transactionKey being null on the second call where first!=true");
+            }
             if (!transactionKey.equals(transactionSynchronizationRegistry.getTransactionKey())) {
                 throw new RemoteException("Transaction on second call was not the same as on first call");
             }

@@ -21,6 +21,14 @@ public class LookupHelper {
         return lookupRemoteEJBOutbound(beanImplName, remoteInterface, false, ejbProperties);
     }
 
+    public static <T> T lookupRemoteStatelessEJBOutbound(String beanImplName, Class<T> remoteInterface) throws NamingException {
+        return lookupRemoteEJBOutbound(beanImplName, remoteInterface, false, null);
+    }
+
+    public static <T> T lookupRemoteStatefulEJBOutbound(String beanImplName, Class<T> remoteInterface) throws NamingException {
+        return lookupRemoteEJBOutbound(beanImplName, remoteInterface, true, null);
+    }
+
     @SuppressWarnings("unchecked")
     public static <T> T lookupRemoteEJBOutbound(String beanImplName, Class<T> remoteInterface, boolean isStateful, Properties ejbProperties) throws NamingException {
         String remoteDeploymentName = System.getProperty("tx.server.host", "tx-server"); // TODO: maybe change the way
@@ -33,6 +41,10 @@ public class LookupHelper {
         
         return (T) context.lookup("ejb:/" + remoteDeploymentName + "/" + beanImplName + "!"
                 + remoteInterface.getName() + (isStateful ? "?stateful" : ""));
+    }
+
+    public static <T> T lookupModuleEJB(Class<T> beanImplClass) {
+        return lookupModuleEJB(beanImplClass, null);
     }
 
     public static <T> T lookupModuleEJB(Class<T> beanImplClass, Properties ejbProperties) {

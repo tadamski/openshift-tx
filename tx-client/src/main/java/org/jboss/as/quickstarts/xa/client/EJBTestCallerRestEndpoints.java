@@ -11,16 +11,17 @@ import org.jboss.as.quickstarts.xa.resources.MockXAResource;
 public class EJBTestCallerRestEndpoints {
 
     @EJB
-    private BeanTestServerCallerOnePhase serverCallerOnePhase;
+    private StatelessServerCallerOnePhase serverCallerOnePhase;
 
     @EJB
-    private BeanTestServerCallerTwoPhase serverCallerTwoPhase;
+    private StatelessServerCallerTwoPhase serverCallerTwoPhase;
 
     @GET
     @Path("stateless-pass")
     @Produces("text/plain")
-    public String testToPass() {
-        BeanTestToPass bean = LookupHelper.lookupModuleEJB(BeanTestToPass.class, null);
+    public String statelessToPass() {
+        // calling remote StatelessToPassBean
+        StatelessBeanManagedToPass bean = LookupHelper.lookupModuleEJB(StatelessBeanManagedToPass.class);
         return bean.call();
     }
 
@@ -59,4 +60,13 @@ public class EJBTestCallerRestEndpoints {
         return serverCallerTwoPhase.call("StatelessToPassBean", MockXAResource.TestAction.COMMIT_JVM_HALT);
     }
 
+
+    @GET
+    @Path("stateful-pass")
+    @Produces("text/plain")
+    public String statefulToPass() {
+        // calling remote StatefulToPassBean
+        StatefulBeanManagedToPass bean = LookupHelper.lookupModuleEJB(StatefulBeanManagedToPass.class);
+        return bean.call();
+    }
 }
