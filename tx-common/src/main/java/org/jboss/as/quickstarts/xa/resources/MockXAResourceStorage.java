@@ -44,7 +44,7 @@ final class MockXAResourceStorage {
         File logStorageFile = getMockXAResourceTxnLogStore();
 
         if (!logStorageFile.exists()) {
-            LOG.errorf("file %s does not exists - no data can be recorecovery", logStorageFile.getAbsolutePath());
+            LOG.warnf("file %s does not exists - no data can be recovered", logStorageFile.getAbsolutePath());
             return recoveredXids;
         }
 

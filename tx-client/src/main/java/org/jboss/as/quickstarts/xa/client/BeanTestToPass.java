@@ -15,6 +15,10 @@ import org.jboss.as.quickstarts.xa.resources.StatusUtils;
 import org.jboss.as.quickstarts.xa.server.StatelessRemote;
 import org.jboss.logging.Logger;
 
+/**
+ * EJB using the {@link TransactionManagement} of <code>BEAN</code>
+ * and makes first call without and then with the transaction context.
+ */
 @Stateless
 @TransactionManagement(TransactionManagementType.BEAN)
 public class BeanTestToPass {

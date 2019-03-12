@@ -9,15 +9,14 @@ import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
 import org.jboss.logging.Logger;
+import org.jboss.tm.XAResourceWrapper;
 
-public class MockXAResource implements XAResource, Serializable {
+public class MockXAResource implements XAResource, XAResourceWrapper, Serializable {
     private static final long serialVersionUID = 1L;
     private static Logger LOG = Logger.getLogger(MockXAResource.class);
 
     // using Set for two Xids would not be part of the collection
     private static final Collection<Xid> preparedXids = ConcurrentHashMap.newKeySet();
-
-    private Xid currentXid = null; 
 
     public enum TestAction {
         NONE,
@@ -41,11 +40,6 @@ public class MockXAResource implements XAResource, Serializable {
     @Override
     public int prepare(Xid xid) throws XAException {
         LOG.infof("prepare '%s' xid: [%s]", this, xid);
-        if (!xid.equals(currentXid)) {
-            LOG.warnf("%s.commit - wrong Xid. Wanted to commit '%s' but started Xid is '%s'",
-                    this.getClass(), xid, currentXid);
-        }
-
 
         switch (testAction) {
             case PREPARE_THROW_XAER_RMERR:
@@ -71,10 +65,6 @@ public class MockXAResource implements XAResource, Serializable {
     @Override
     public void commit(Xid xid, boolean onePhase) throws XAException {
         LOG.infof("commit '%s' xid:[%s], %s one phase", this, xid, onePhase ? "with" : "without");
-        if (!xid.equals(currentXid)) {
-            LOG.warnf("%s.rollback - wrong Xid. Wanted to rollback '%s' but started Xid is '%s'",
-                    this.getClass(), xid, currentXid);
-        }
 
         switch (testAction) {
             case COMMIT_THROW_XAER_RMERR:
@@ -140,7 +130,7 @@ public class MockXAResource implements XAResource, Serializable {
     @Override
     public void start(Xid xid, int flags) throws XAException {
         LOG.infof("start '%s' xid: [%s], flags: %s", this, xid, flags);
-        currentXid = xid;
+        // currentXid = xid;
     }
 
     /**
@@ -154,6 +144,27 @@ public class MockXAResource implements XAResource, Serializable {
     private void removeLog(Xid xid) {
         preparedXids.remove(xid);
         MockXAResourceStorage.writeToDisk(preparedXids);
-        currentXid = null;
+        // currentXid = null;
+    }
+
+    // ---------------- METHODS of XAResourceWrapper --------------------
+    // --- needed for not having JBTM-860 failures with the MockXAResource 
+    public XAResource getResource() {
+        throw new UnsupportedOperationException("getResource() method from "
+                + XAResourceWrapper.class.getName() + " is not implemented yet");
+    }
+
+    public String getProductName() {
+        return MockXAResource.class.getSimpleName() + " Test";
+    }
+
+    public String getProductVersion() {
+        return "0.1.Mock";
+    }
+
+    public String getJndiName() {
+        String jndi = "java:/" + MockXAResource.class.getSimpleName();
+        LOG.debugf("getJndiName()[return %s]", jndi);
+        return jndi;
     }
 }

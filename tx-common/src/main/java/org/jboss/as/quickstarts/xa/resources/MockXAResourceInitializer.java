@@ -23,8 +23,9 @@ public class MockXAResourceInitializer {
      */
     @PostConstruct
     public void postConstruct() {
-        log.info("TestXAResourceRecoveryHelper starting");
+        log.infof("Adding instance of the MockXAResourceRecoveryHelper '%s' to XARecoveryModule", MockXAResourceRecoveryHelper.INSTANCE);
         getRecoveryModule().addXAResourceRecoveryHelper(MockXAResourceRecoveryHelper.INSTANCE);
+        MockXAResource.initPreparedXids(MockXAResourceStorage.recoverFromDisk());
     }
 
     /**
@@ -32,7 +33,7 @@ public class MockXAResourceInitializer {
      */
     @PreDestroy
     public void preDestroy() {
-        log.info("TestXAResourceRecoveryHelper stopping");
+        log.infof("Stopping MockXAResource initializer by removing instance of helper '%s' from XARecoveryModule", MockXAResourceRecoveryHelper.INSTANCE);
         getRecoveryModule().removeXAResourceRecoveryHelper(MockXAResourceRecoveryHelper.INSTANCE);
     }
 

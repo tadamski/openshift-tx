@@ -154,7 +154,9 @@ oc start-build tx-client --from-dir="." --follow
 ```
 APP=tx-client
 oc scale sts $APP --replicas=0; while `oc get pods | grep -q $APP-0`;\
-  do echo "sleeping one second"; sleep 1; done; echo done; oc scale sts $APP --replicas=1
+  do echo "sleeping one second"; sleep 1; done; echo done;\
+  oc delete pvc eapdata-$APP-0;\
+  oc scale sts $APP --replicas=1
 ```
 
 * Forcing periodic recovery to be executed
@@ -200,7 +202,7 @@ done
 * RBAC permission to add the default service account to view all in the namespace
   `oc policy add-role-to-user view system:serviceaccount:$(oc project -q):default -n $(oc project -q)`
 
-* Troubles with building s2i. Run the s2i localy to see what's happen
+* Troubles with building s2i. Run the s2i localy to see what's happening
   `s2i build ./ registry.access.redhat.com/jboss-eap-7/eap72-openshift:latest  local/testing-tx-client`
 
 ### Appendix 3: Outbound connection standalone.xml changes

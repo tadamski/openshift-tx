@@ -27,6 +27,7 @@ Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 
     <properties>
     	<version.jboss.spec.javaee.7.0>1.1.0.Final-redhat-3</version.jboss.spec.javaee.7.0>
+    	<version.narayana.spi>7.6.0.Final</version.narayana.spi>
     	<version.server.bom>7.1.0.GA</version.server.bom>
     </properties>
 
@@ -97,6 +98,12 @@ Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <!-- For EAP knows where to find the recovered XA Resource -->
+            <dependency>
+	            <groupId>org.jboss</groupId>
+	            <artifactId>jboss-transaction-spi</artifactId>
+	            <version>${version.narayana.spi}</version>
+	        </dependency>
         </dependencies>
     </dependencyManagement>
 
