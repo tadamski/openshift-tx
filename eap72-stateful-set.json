@@ -385,12 +385,9 @@
                                     "initialDelaySeconds": 60
                                 },
                                 "readinessProbe": {
-                                    "exec": {
-                                        "command": [
-                                            "/bin/bash",
-                                            "-c",
-                                            "/opt/eap/bin/readinessProbe.sh"
-                                        ]
+                                    "httpGet": {
+                                        "path": "/tx-server/api/ready",
+                                        "port": 8080
                                     }
                                 },
                                 "ports": [
