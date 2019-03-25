@@ -353,23 +353,6 @@
                     },
                     "spec": {
                         "terminationGracePeriodSeconds": 75,
-                        "initContainers": [
-                            {
-                                "name": "init",
-                                "image": "busybox",
-                                "command": [
-                                    "/bin/sh",
-                                    "-c",
-                                    "echo 'Removing data from eapdata volume'; rm -rf /opt/eap/standalone/data/*;"
-                                ],
-                                "volumeMounts": [
-                                    {
-                                        "name": "eapdata",
-                                        "mountPath": "/opt/eap/standalone/data"
-                                    }
-                                ]
-                            }
-                        ],
                         "containers": [
                             {
                                 "name": "${APPLICATION_NAME}",
