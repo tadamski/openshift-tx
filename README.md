@@ -41,6 +41,13 @@ curl -XGET "http://tx-client-`oc project -q`.`minishift ip`.nip.io/tx-client/api
 
 # stateful bean without failures using `UserTransaction` to begin transaction
 curl -XGET "http://tx-client-`oc project -q`.`minishift ip`.nip.io/tx-client/api/ejb/stateful-pass"
+
+# stateless bean without failures using, remote ejb lookup with programatic api without outbound connection
+curl -XGET "http://tx-client-`oc project -q`.`minishift ip`.nip.io/tx-client/api/ejb/stateless-programatic-pass"
+
+# stateless bean with JVM halt on the client after prepare is called on the remote ejb
+# while the remote ejb lookup is done via programatic api without outbound connection
+curl -XGET "http://tx-client-`oc project -q`.`minishift ip`.nip.io/tx-client/api/ejb/stateless-programatic-jvm-halt-on-prepare-client"
 ```
 
 ## Changes in WildFly/EAP configuration
@@ -118,12 +125,13 @@ oc port-forward tx-server-0 8787:8787 &
 all the building. These lines could help with that
 
 ```
+oc delete all --all; oc delete $(oc get pvc -o name); oc delete template eap72-stateful-set
 oc create -f eap72-image-stream.json
 oc create -f eap72-stateful-set.json
 REF=tadamski-master-unchanged-my-changes
 REPO=ochaloup
 oc new-app --template=eap72-stateful-set -p APPLICATION_NAME=tx-client -p ARTIFACT_DIR=tx-client/target -p SOURCE_REPOSITORY_URL=https://github.com/${REPO}/openshift-tx.git -p SOURCE_REPOSITORY_REF=$REF
-oc new-app --template=eap72-stateful-set -p APPLICATION_NAME=tx-server -p ARTIFACT_DIR=tx-server/target -p SOURCE_REPOSITORY_URL=https://github.com/${REPO}/openshift-tx.git -p SOURCE_REPOSITORY_REF=$REF
+oc new-app --template=eap72-stateful-set -p APPLICATION_NAME=tx-server -p ARTIFACT_DIR=tx-server/target -p SOURCE_REPOSITORY_URL=https://github.com/${REPO}/openshift-tx.git -p SOURCE_REPOSITORY_REF=$REF -p REPLICAS=2
 sleep 10; oc logs -f bc/tx-client
 ```
 
@@ -137,6 +145,7 @@ sleep 10; oc logs -f bc/tx-client
 
 ```
 cd openshift-tx
+mvn clean install
 # to build tx-client `bc/tx-client`
 oc start-build tx-client --from-dir="." --follow
 # to build tx-server `bc/tx-server`
@@ -147,10 +156,31 @@ oc start-build tx-server --from-dir="." --follow
   the StatefulSet. This oneliner could help with that
 
 ```
-APP=tx-server
+APP=tx-client
 oc scale sts $APP --replicas=0; while `oc get pods | grep -q $APP-0`;\
   do echo "sleeping one second"; sleep 1; done; echo done;\
   oc scale sts $APP --replicas=1
+```
+
+* As one "single" command to build, deploy, scale and wait till running
+  with the new version of the application this bunch of command is usable.
+
+```
+APP=tx-client &&\
+mvn clean package &&\
+oc start-build $APP --from-dir="." --follow &&\
+# scale down and waiting
+oc scale sts $APP --replicas=0 &&\
+while `oc get pods | grep -q $APP-0`;\
+  do echo "sleeping one second"; sleep 1; done &&\
+  echo "$APP scaled to 0" &&\
+# scale up and waiting for new version of app is running
+oc scale sts $APP --replicas=1 &&\
+while `oc get pods | grep $APP-0 | grep -q -v Running`;\
+  do echo "sleeping one second"; sleep 1; done &&\
+  echo "$APP scaled to 1" &&\
+oc logs $APP-0 -f;
+
 ```
 
 * If we work with the build - for example changing `.s2i/bin/assemble` script it's
@@ -163,13 +193,14 @@ oc scale sts $APP --replicas=0; while `oc get pods | grep -q $APP-0`;\
 oc delete bc tx-client
 oc new-build --image-stream=eap-transactions/jboss-eap72-openshift:latest --to=tx-client:latest\
   -eARTIFACT_DIR=tx-client/target -eMAVEN_ARGS_APPEND='-Dcom.redhat.xpaas.repo.jbossorg' --binary=true
+mvn clean package
 oc start-build tx-client --from-dir="." --follow
 ```
 
 * Forcing periodic recovery to be executed
 
 ```
-RECOVERY_FOR_POD=tx-server-0
+RECOVERY_FOR_POD=tx-client-0
 oc rsh $RECOVERY_FOR_POD java -cp /opt/eap/modules/system/layers/base/org/jboss/jts/main/narayana-jts-idlj-5.9.0.Final-redhat-00001.jar com.arjuna.ats.arjuna.tools.RecoveryMonitor -host $RECOVERY_FOR_POD -port 4712 -timeout 1800000
 ```
 

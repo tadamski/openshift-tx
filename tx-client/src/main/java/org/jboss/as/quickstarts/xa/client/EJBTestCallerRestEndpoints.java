@@ -6,6 +6,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
 import org.jboss.as.quickstarts.xa.resources.MockXAResource;
+import org.jboss.as.quickstarts.xa.resources.MockXAResource.TestAction;
 
 @Path("ejb")
 public class EJBTestCallerRestEndpoints {
@@ -35,7 +36,7 @@ public class EJBTestCallerRestEndpoints {
     @GET
     @Path("stateless-jvm-halt-on-prepare-server")
     @Produces("text/plain")
-    public String BeanTestToKillJVMOnPrepareServer() {
+    public String BeanTestToHaltJVMOnPrepareServer() {
         return serverCallerTwoPhase.callTestActionNone("StatelessBeanKillOnPrepare");
     }
 
@@ -49,7 +50,7 @@ public class EJBTestCallerRestEndpoints {
     @GET
     @Path("stateless-jvm-halt-on-prepare-client")
     @Produces("text/plain")
-    public String BeanTestToKillJVMOnPrepareClient() {
+    public String testToHaltJVMOnPrepareClient() {
         return serverCallerTwoPhase.call("StatelessToPassBean", MockXAResource.TestAction.PREPARE_JVM_HALT);
     }
 
@@ -68,5 +69,24 @@ public class EJBTestCallerRestEndpoints {
         // calling remote StatefulToPassBean
         StatefulBeanManagedToPass bean = LookupHelper.lookupModuleEJB(StatefulBeanManagedToPass.class);
         return bean.call();
+    }
+
+    @GET
+    @Path("stateless-programatic-pass")
+    @Produces("text/plain")
+    public String statelessProgrammaticToPass() {
+        // calling remote StatelessToPassBean, look-up with programmatic way (no outbound connection here)
+        StatelessServerProgramaticCallerTwoPhase bean = LookupHelper.lookupModuleEJB(StatelessServerProgramaticCallerTwoPhase.class);
+        return bean.call("StatelessToPassBean", TestAction.NONE);
+    }
+
+    @GET
+    @Path("stateless-programatic-jvm-halt-on-prepare-client")
+    @Produces("text/plain")
+    public String testProgrammaticToKillJVMOnPrepareClient() {
+        // calling remote StatelessToPassBean, look-up with programmatic way (no outbound connection here)
+        // killing JVM after prepare is called on the remote connection before the client MockXAResource is called
+        StatelessServerProgramaticCallerTwoPhase bean = LookupHelper.lookupModuleEJB(StatelessServerProgramaticCallerTwoPhase.class);
+        return bean.call("StatelessToPassBean", MockXAResource.TestAction.PREPARE_JVM_HALT);
     }
 }
