@@ -25,7 +25,7 @@ public class StatelessServerCallerTwoPhase {
 
     public String call(String beanName, MockXAResource.TestAction testAction) {
         try {
-            StatelessRemote bean = LookupHelper.lookupRemoteStatelessEJBOutbound(beanName, StatelessRemote.class);
+            StatelessRemote bean = LookupHelper.lookupRemoteEJBOutbound(beanName, StatelessRemote.class, false, null);
             manager.getTransaction().enlistResource(new MockXAResource(testAction));
             int status = bean.call();
             log.infof("Transaction status from 'call' is %s", status);

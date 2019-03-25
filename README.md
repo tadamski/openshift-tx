@@ -44,6 +44,10 @@ curl -XGET "http://tx-client-`oc project -q`.`minishift ip`.nip.io/tx-client/api
 
 # stateless bean without failures using, remote ejb lookup with programatic api without outbound connection
 curl -XGET "http://tx-client-`oc project -q`.`minishift ip`.nip.io/tx-client/api/ejb/stateless-programatic-pass"
+
+# stateless bean with JVM halt on the client after prepare is called on the remote ejb
+# while the remote ejb lookup is done via programatic api without outbound connection
+curl -XGET "http://tx-client-`oc project -q`.`minishift ip`.nip.io/tx-client/api/ejb/stateless-programatic-jvm-halt-on-prepare-client"
 ```
 
 ## Changes in WildFly/EAP configuration
@@ -127,7 +131,7 @@ oc create -f eap72-stateful-set.json
 REF=tadamski-master-unchanged-my-changes
 REPO=ochaloup
 oc new-app --template=eap72-stateful-set -p APPLICATION_NAME=tx-client -p ARTIFACT_DIR=tx-client/target -p SOURCE_REPOSITORY_URL=https://github.com/${REPO}/openshift-tx.git -p SOURCE_REPOSITORY_REF=$REF
-oc new-app --template=eap72-stateful-set -p APPLICATION_NAME=tx-server -p ARTIFACT_DIR=tx-server/target -p SOURCE_REPOSITORY_URL=https://github.com/${REPO}/openshift-tx.git -p SOURCE_REPOSITORY_REF=$REF
+oc new-app --template=eap72-stateful-set -p APPLICATION_NAME=tx-server -p ARTIFACT_DIR=tx-server/target -p SOURCE_REPOSITORY_URL=https://github.com/${REPO}/openshift-tx.git -p SOURCE_REPOSITORY_REF=$REF -p REPLICAS=2
 sleep 10; oc logs -f bc/tx-client
 ```
 
