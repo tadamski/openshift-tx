@@ -53,7 +53,7 @@ public class LookupHelper {
          *    https://issues.jboss.org/browse/JBEAP-16509
          *    https://access.redhat.com/documentation/en-us/red_hat_jboss_enterprise_application_platform/7.2/html-single/developing_ejb_applications/index*/
         String remoteServerHost = System.getProperty("tx.server.host", "tx-server"); // TODO: maybe change the way
-        jndiProperties.put(javax.naming.Context.PROVIDER_URL, "remote+http://" + remoteServerHost + ":8080");
+        jndiProperties.put(javax.naming.Context.PROVIDER_URL, "http-remoting://" + remoteServerHost + ":8080");
         jndiProperties.put(Context.URL_PKG_PREFIXES, JNDI_PKG_PREFIXES);
 
         // and the question is how the ejb.context works :)
