@@ -24,8 +24,8 @@ public class StatelessServerProgramaticCallerTwoPhase {
     public String call(String beanName, MockXAResource.TestAction testAction) {
         try {
             StatelessRemote bean = LookupHelper.lookupRemoteEJBDirect(beanName, StatelessRemote.class, false, null);
-            int status = bean.call();
             manager.getTransaction().enlistResource(new MockXAResource(testAction));
+            int status = bean.call();
             log.infof("Transaction status from programatic 'call' is %s", status);
         } catch (Exception e) {
             throw new RuntimeException("Error on calling bean " + beanName + " programatically looked-up", e);
