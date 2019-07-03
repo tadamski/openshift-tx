@@ -21,16 +21,28 @@ public class StatelessServerProgramaticCallerTwoPhase {
     @Resource(lookup = "java:/TransactionManager")
     private TransactionManager manager;
 
-    public String call(String beanName, MockXAResource.TestAction testAction) {
+    public String call(String beanName, PlaceToEnlist whereToEnlist, MockXAResource.TestAction testAction) {
         try {
             StatelessRemote bean = LookupHelper.lookupRemoteEJBDirect(beanName, StatelessRemote.class, false, null);
-            manager.getTransaction().enlistResource(new MockXAResource(testAction));
+
+            if(PlaceToEnlist.BEFORE_REMOTE_EJB == whereToEnlist) {
+            	manager.getTransaction().enlistResource(new MockXAResource(testAction));
+            }
+
             int status = bean.call();
             log.infof("Transaction status from programatic 'call' is %s", status);
+
+            if(PlaceToEnlist.AFTER_REMOTE_EJB == whereToEnlist) {
+            	manager.getTransaction().enlistResource(new MockXAResource(testAction));
+            }
         } catch (Exception e) {
             throw new RuntimeException("Error on calling bean " + beanName + " programatically looked-up", e);
         }
 
         return "SUCCESS";
+    }
+
+    public String call(String beanName) {
+        return this.call(beanName, PlaceToEnlist.BEFORE_REMOTE_EJB, MockXAResource.TestAction.NONE);
     }
 }

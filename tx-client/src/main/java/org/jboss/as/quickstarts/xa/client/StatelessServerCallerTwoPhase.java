@@ -23,12 +23,20 @@ public class StatelessServerCallerTwoPhase {
     @Resource(lookup = "java:/TransactionManager")
     private TransactionManager manager;
 
-    public String call(String beanName, MockXAResource.TestAction testAction) {
+    public String call(String beanName, PlaceToEnlist whereToEnlist, MockXAResource.TestAction testAction) {
         try {
             StatelessRemote bean = LookupHelper.lookupRemoteEJBOutbound(beanName, StatelessRemote.class, false, null);
+
+            if(PlaceToEnlist.BEFORE_REMOTE_EJB == whereToEnlist) {
+            	manager.getTransaction().enlistResource(new MockXAResource(testAction));
+            }
+            
             int status = bean.call();
-            manager.getTransaction().enlistResource(new MockXAResource(testAction));
             log.infof("Transaction status from 'call' is %s", status);
+
+            if(PlaceToEnlist.AFTER_REMOTE_EJB == whereToEnlist) {
+            	manager.getTransaction().enlistResource(new MockXAResource(testAction));
+            }
         } catch (Exception e) {
             throw new RuntimeException("Error on calling bean " + beanName, e);
         }
@@ -36,7 +44,7 @@ public class StatelessServerCallerTwoPhase {
         return "SUCCESS";
     }
 
-    public String callTestActionNone(String beanName) {
-        return this.call(beanName, MockXAResource.TestAction.NONE);
+    public String call(String beanName) {
+        return this.call(beanName, PlaceToEnlist.BEFORE_REMOTE_EJB, MockXAResource.TestAction.NONE);
     }
 }
