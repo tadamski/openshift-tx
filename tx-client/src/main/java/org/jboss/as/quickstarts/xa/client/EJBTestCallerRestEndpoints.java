@@ -37,28 +37,41 @@ public class EJBTestCallerRestEndpoints {
     @Path("stateless-jvm-halt-on-prepare-server")
     @Produces("text/plain")
     public String BeanTestToHaltJVMOnPrepareServer() {
-        return serverCallerTwoPhase.callTestActionNone("StatelessBeanKillOnPrepare");
+        return serverCallerTwoPhase.call("StatelessBeanKillOnPrepare");
     }
 
     @GET
     @Path("stateless-jvm-halt-on-commit-server")
     @Produces("text/plain")
     public String testToHaltJVMOnCommitServer() {
-        return serverCallerTwoPhase.callTestActionNone("StatelessBeanKillOnCommit");
+        return serverCallerTwoPhase.call("StatelessBeanKillOnCommit");
     }
 
+    /**
+     * 1. call remote ejb
+     * 2. enlist xa resource
+     * 3. prepare remote ejb
+     * 4. crash JVM
+     */
     @GET
     @Path("stateless-jvm-halt-on-prepare-client")
     @Produces("text/plain")
     public String testToHaltJVMOnPrepareClient() {
-        return serverCallerTwoPhase.call("StatelessToPassBean", MockXAResource.TestAction.PREPARE_JVM_HALT);
+        return serverCallerTwoPhase.call("StatelessToPassBean", PlaceToEnlist.AFTER_REMOTE_EJB, MockXAResource.TestAction.PREPARE_JVM_HALT);
     }
 
+    /**
+     * 1. enlist xa resource
+     * 2. call remote ejb
+     * 3. prepare xa resource
+     * 4. prepare remote ejb
+     * 4. crash JVM
+     */
     @GET
     @Path("stateless-jvm-halt-on-commit-client")
     @Produces("text/plain")
     public String testToHaltJVMOnCommitClient() {
-        return serverCallerTwoPhase.call("StatelessToPassBean", MockXAResource.TestAction.COMMIT_JVM_HALT);
+        return serverCallerTwoPhase.call("StatelessToPassBean", PlaceToEnlist.BEFORE_REMOTE_EJB, MockXAResource.TestAction.COMMIT_JVM_HALT);
     }
 
 
@@ -77,7 +90,7 @@ public class EJBTestCallerRestEndpoints {
     public String statelessProgrammaticToPass() {
         // calling remote StatelessToPassBean, look-up with programmatic way (no outbound connection here)
         StatelessServerProgramaticCallerTwoPhase bean = LookupHelper.lookupModuleEJB(StatelessServerProgramaticCallerTwoPhase.class);
-        return bean.call("StatelessToPassBean", TestAction.NONE);
+        return bean.call("StatelessToPassBean");
     }
 
     @GET
@@ -87,6 +100,16 @@ public class EJBTestCallerRestEndpoints {
         // calling remote StatelessToPassBean, look-up with programmatic way (no outbound connection here)
         // killing JVM after prepare is called on the remote connection before the client MockXAResource is called
         StatelessServerProgramaticCallerTwoPhase bean = LookupHelper.lookupModuleEJB(StatelessServerProgramaticCallerTwoPhase.class);
-        return bean.call("StatelessToPassBean", MockXAResource.TestAction.PREPARE_JVM_HALT);
+        return bean.call("StatelessToPassBean", PlaceToEnlist.AFTER_REMOTE_EJB, MockXAResource.TestAction.PREPARE_JVM_HALT);
+    }
+
+    @GET
+    @Path("stateless-programatic-jvm-halt-on-commit-client")
+    @Produces("text/plain")
+    public String testProgrammaticToKillJVMOnCommitClient() {
+        // calling remote StatelessToPassBean, look-up with programmatic way (no outbound connection here)
+        // killing JVM before commit is called on the remote connection
+        StatelessServerProgramaticCallerTwoPhase bean = LookupHelper.lookupModuleEJB(StatelessServerProgramaticCallerTwoPhase.class);
+        return bean.call("StatelessToPassBean", PlaceToEnlist.BEFORE_REMOTE_EJB, MockXAResource.TestAction.COMMIT_JVM_HALT);
     }
 }

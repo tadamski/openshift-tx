@@ -46,8 +46,12 @@ curl -XGET "http://tx-client-`oc project -q`.`minishift ip`.nip.io/tx-client/api
 curl -XGET "http://tx-client-`oc project -q`.`minishift ip`.nip.io/tx-client/api/ejb/stateless-programatic-pass"
 
 # stateless bean with JVM halt on the client after prepare is called on the remote ejb
-# while the remote ejb lookup is done via programatic api without outbound connection
+# the remote ejb lookup is done via programatic api without outbound connection
 curl -XGET "http://tx-client-`oc project -q`.`minishift ip`.nip.io/tx-client/api/ejb/stateless-programatic-jvm-halt-on-prepare-client"
+
+# stateless bean with JVM halt on the client before commit is called on the remote ejb
+# the remote ejb lookup is done via programatic api without outbound connection
+curl -XGET "http://tx-client-`oc project -q`.`minishift ip`.nip.io/tx-client/api/ejb/stateless-programatic-jvm-halt-on-commit-client"
 ```
 
 ## Changes in WildFly/EAP configuration
@@ -128,7 +132,7 @@ all the building. These lines could help with that
 oc delete all --all; oc delete $(oc get pvc -o name); oc delete template eap72-stateful-set
 oc create -f eap72-image-stream.json
 oc create -f eap72-stateful-set.json
-REF=tadamski-master-unchanged-my-changes
+REF=master
 REPO=ochaloup
 oc new-app --template=eap72-stateful-set -p APPLICATION_NAME=tx-client -p ARTIFACT_DIR=tx-client/target -p SOURCE_REPOSITORY_URL=https://github.com/${REPO}/openshift-tx.git -p SOURCE_REPOSITORY_REF=$REF
 oc new-app --template=eap72-stateful-set -p APPLICATION_NAME=tx-server -p ARTIFACT_DIR=tx-server/target -p SOURCE_REPOSITORY_URL=https://github.com/${REPO}/openshift-tx.git -p SOURCE_REPOSITORY_REF=$REF -p REPLICAS=2
